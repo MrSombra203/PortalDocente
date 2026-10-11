@@ -1,8 +1,170 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+@model DashboardViewModel
+@{
+    ViewData["Title"] = "Resumen de progreso";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">SEGUIMIENTO ACADÉMICO</p>
+        <h1>Resumen de progreso</h1>
+        <p class="page-subtitle">Consulta la actividad y los resultados recientes de tus estudiantes.</p>
+    </div>
+    <a class="button button-primary" asp-controller="Estudiantes" asp-action="Index">Ver estudiantes <span aria-hidden="true">→</span></a>
+</section>
+
+@if (Model.UsaDatosDemo)
+{
+    <div class="notice notice-demo" role="status">
+        <span class="notice-mark" aria-hidden="true">i</span>
+        <span><strong>Entorno de demostración.</strong> Los nombres y resultados mostrados son ficticios.</span>
+    </div>
+}
+else if (!string.IsNullOrWhiteSpace(Model.MensajeFuenteDatos))
+{
+    <div class="notice notice-info" role="status">@Model.MensajeFuenteDatos</div>
+}
+
+<section class="metric-grid" aria-label="Indicadores del curso">
+    <article class="metric-card">
+        <div class="metric-icon icon-purple" aria-hidden="true">◎</div>
+        <div><p>Estudiantes</p><strong>@Model.TotalEstudiantes</strong><span>en tus cohortes</span></div>
+    </article>
+    <article class="metric-card">
+        <div class="metric-icon icon-green" aria-hidden="true">↗</div>
+        <div><p>Con actividad</p><strong>@Model.EstudiantesConProgreso</strong><span>@Model.EstudiantesSinProgreso sin partidas</span></div>
+    </article>
+    <article class="metric-card">
+        <div class="metric-icon icon-blue" aria-hidden="true">▤</div>
+        <div><p>Partidas registradas</p><strong>@Model.TotalPartidas</strong><span>@Model.PartidasFinalizadas finalizadas</span></div>
+    </article>
+    <article class="metric-card">
+        <div class="metric-icon icon-orange" aria-hidden="true">★</div>
+        <div><p>Puntuación reciente</p><strong>@(Model.PromedioPuntuacionReciente?.ToString("0.0") ?? "—")<small>@(Model.PromedioPuntuacionReciente.HasValue ? " pts" : "")</small></strong><span>promedio de las partidas con KPI</span></div>
+    </article>
+</section>
+
+<div class="dashboard-grid">
+    <section class="panel progress-panel">
+        <div class="panel-heading">
+            <div>
+                <h2>Evolución del desempeño</h2>
+                <p>Puntuación global promedio por día, según los últimos registros</p>
+            </div>
+            <span class="chart-legend"><i></i> Puntuación</span>
+        </div>
+        @if (Model.EvolucionGeneral.Count == 0)
+        {
+            <div class="empty-state compact-empty">
+                <span class="empty-icon" aria-hidden="true">⌁</span>
+                <strong>Aún no hay resultados para graficar</strong>
+                <p>La evolución aparecerá cuando se registren partidas con KPI.</p>
+            </div>
+        }
+        else
+        {
+            var values = Model.EvolucionGeneral.Select(p => p.Puntuacion).ToList();
+            var max = Math.Max(100m, values.Max());
+            var points = string.Join(" ", values.Select((value, index) =>
+                string.Join(",", (values.Count == 1 ? 300m : 30m + (540m * index / (values.Count - 1)))
+                    .ToString("0.##", System.Globalization.CultureInfo.InvariantCulture),
+                    (160m - (value / max * 130m)).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture))));
+            <div class="chart-wrap">
+                <div class="chart-scale"><span>100</span><span>50</span><span>0</span></div>
+                <svg class="line-chart" viewBox="0 0 600 180" role="img" aria-label="Evolución de puntuación global">
+                    <line x1="30" y1="30" x2="570" y2="30" class="chart-gridline" />
+                    <line x1="30" y1="95" x2="570" y2="95" class="chart-gridline" />
+                    <line x1="30" y1="160" x2="570" y2="160" class="chart-gridline" />
+                    @if (values.Count > 1)
+                    {
+                        <polyline points="@points" class="chart-line" />
+                    }
+                    @foreach (var (point, index) in Model.EvolucionGeneral.Select((point, index) => (point, index)))
+                    {
+                        var x = values.Count == 1 ? 300 : 30 + (540m * index / (values.Count - 1));
+                        var y = 160m - (point.Puntuacion / max * 130m);
+                        <circle cx="@x.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)"
+                                cy="@y.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)"
+                                r="4" class="chart-dot">
+                            <title>@point.Etiqueta: @point.Puntuacion.ToString("0.0") puntos</title>
+                        </circle>
+                    }
+                </svg>
+            </div>
+            <div class="chart-labels">
+                @foreach (var point in Model.EvolucionGeneral)
+                {
+                    <span>@point.Etiqueta</span>
+                }
+            </div>
+        }
+    </section>
+
+    <section class="panel activity-panel">
+        <div class="panel-heading">
+            <div>
+                <h2>Actividad reciente</h2>
+                <p>Últimas partidas registradas</p>
+            </div>
+            <a class="text-link" asp-controller="Estudiantes" asp-action="Index">Ver lista</a>
+        </div>
+        @if (Model.ActividadReciente.Count == 0)
+        {
+            <div class="empty-state compact-empty">
+                <strong>Sin actividad reciente</strong>
+                <p>Cuando tus estudiantes registren partidas, aparecerán aquí.</p>
+            </div>
+        }
+        else
+        {
+            <ul class="activity-list">
+                @foreach (var actividad in Model.ActividadReciente)
+                {
+                    <li>
+                        <span class="activity-icon" aria-hidden="true">@(actividad.Icono == "trophy" ? "★" : "↗")</span>
+                        <div class="activity-copy">
+                            <strong>@actividad.Titulo</strong>
+                            <span>@actividad.Detalle</span>
+                        </div>
+                        <time datetime="@actividad.Fecha.ToString("O")">@actividad.Fecha.ToLocalTime().ToString("dd MMM")</time>
+                    </li>
+                }
+            </ul>
+        }
+    </section>
 </div>
+
+<section class="panel featured-panel">
+    <div class="panel-heading">
+        <div>
+            <h2>Estudiantes con actividad</h2>
+            <p>Resumen de su última partida registrada</p>
+        </div>
+        <a class="text-link" asp-controller="Estudiantes" asp-action="Index">Todos los estudiantes <span aria-hidden="true">→</span></a>
+    </div>
+    @if (Model.EstudiantesDestacados.Count == 0)
+    {
+        <div class="empty-state compact-empty">
+            <strong>No hay partidas registradas</strong>
+            <p>El progreso aparecerá aquí cuando se sincronicen los primeros resultados.</p>
+        </div>
+    }
+    else
+    {
+        <div class="student-card-grid">
+            @foreach (var estudiante in Model.EstudiantesDestacados)
+            {
+                <a class="student-card" asp-controller="Estudiantes" asp-action="Progreso" asp-route-id="@estudiante.Id">
+                    <span class="student-avatar">@estudiante.Iniciales</span>
+                    <span class="student-card-main">
+                        <strong>@estudiante.NombreCompleto</strong>
+                        <small>@estudiante.Codigo · @estudiante.Partidas partidas</small>
+                    </span>
+                    <span class="student-score">
+                        <strong>@(estudiante.Puntuacion?.ToString("0.0") ?? "—")</strong>
+                        <small>última puntuación</small>
+                    </span>
+                </a>
+            }
+        </div>
+    }
+</section>

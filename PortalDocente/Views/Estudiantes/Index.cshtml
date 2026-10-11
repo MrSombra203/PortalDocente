@@ -1,0 +1,101 @@
+@model EstudiantesIndexViewModel
+@{
+    ViewData["Title"] = "Estudiantes";
+}
+
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">SEGUIMIENTO ACADÉMICO</p>
+        <h1>Estudiantes</h1>
+        <p class="page-subtitle">Consulta la actividad y el progreso individual de tus cohortes.</p>
+    </div>
+    <span class="count-pill">@(Model.Estudiantes.Count == 1 ? "1 estudiante" : $"{Model.Estudiantes.Count} estudiantes")</span>
+</section>
+
+@if (Model.UsaDatosDemo)
+{
+    <div class="notice notice-demo" role="status">
+        <span class="notice-mark" aria-hidden="true">i</span>
+        <span>Los datos de esta demo son ficticios y solo ilustran el seguimiento del progreso.</span>
+    </div>
+}
+
+<section class="panel students-panel">
+    <div class="list-toolbar">
+        <div>
+            <h2>Listado de estudiantes</h2>
+            <p>Selecciona un perfil para revisar su historial de partidas y KPI.</p>
+        </div>
+        <form asp-controller="Estudiantes" asp-action="Index" method="get" class="list-search" role="search">
+            <label class="visually-hidden" for="student-search">Buscar estudiante</label>
+            <input id="student-search" type="search" name="q" value="@Model.Busqueda"
+                   placeholder="Nombre, correo o código" />
+            @if (!string.IsNullOrWhiteSpace(Model.Busqueda))
+            {
+                <a class="clear-search" asp-controller="Estudiantes" asp-action="Index">Limpiar</a>
+            }
+            <button class="button button-primary button-small" type="submit">Buscar</button>
+        </form>
+    </div>
+
+    @if (Model.Estudiantes.Count == 0)
+    {
+        <div class="empty-state">
+            <span class="empty-icon" aria-hidden="true">⌕</span>
+            @if (!string.IsNullOrWhiteSpace(Model.Busqueda))
+            {
+                <strong>No encontramos estudiantes con “@Model.Busqueda”.</strong>
+                <p>Prueba con otro nombre, correo o código institucional.</p>
+            }
+            else
+            {
+                <strong>Aún no hay estudiantes en tus cohortes.</strong>
+                <p>Cuando se registren estudiantes, su progreso aparecerá aquí.</p>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="table-scroll">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th scope="col">Estudiante</th>
+                        <th scope="col">Curso / cohorte</th>
+                        <th scope="col">Progreso</th>
+                        <th scope="col">Partidas</th>
+                        <th scope="col">Última puntuación</th>
+                        <th scope="col">Última actividad</th>
+                        <th scope="col"><span class="visually-hidden">Detalle</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var estudiante in Model.Estudiantes)
+                    {
+                        <tr>
+                            <td>
+                                <div class="table-person">
+                                    <span class="student-avatar">@string.Join("", estudiante.NombreCompleto.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(p => p[0].ToString().ToUpperInvariant()))</span>
+                                    <span><strong>@estudiante.NombreCompleto</strong><small>@estudiante.Correo</small></span>
+                                </div>
+                            </td>
+                            <td>@(estudiante.CursoCohorte ?? "Sin cohorte")</td>
+                            <td>
+                                <span class="progress-status @(estudiante.PartidasRegistradas > 0 ? "has-progress" : "no-progress")">
+                                    <i aria-hidden="true"></i>@estudiante.EstadoProgreso
+                                </span>
+                            </td>
+                            <td>@estudiante.PartidasRegistradas</td>
+                            <td>@(estudiante.UltimaPuntuacion?.ToString("0.0") is { } score ? $"{score} pts" : "—")</td>
+                            <td>@(estudiante.UltimaActividad?.ToLocalTime().ToString("dd/MM/yyyy") ?? "—")</td>
+                            <td>
+                                <a class="row-link" asp-action="Progreso" asp-route-id="@estudiante.Id" aria-label="Ver progreso de @estudiante.NombreCompleto">Ver <span aria-hidden="true">→</span></a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <p class="table-caption">Mostrando @(Model.Estudiantes.Count == 1 ? "1 estudiante" : $"{Model.Estudiantes.Count} estudiantes")</p>
+    }
+</section>

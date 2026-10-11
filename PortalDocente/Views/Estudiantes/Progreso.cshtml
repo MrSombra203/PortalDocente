@@ -1,0 +1,165 @@
+@model ProgresoEstudianteViewModel
+@{
+    ViewData["Title"] = "Progreso de " + Model.NombreCompleto;
+}
+
+<nav class="breadcrumbs" aria-label="Ruta de navegación">
+    <a asp-controller="Home" asp-action="Index">Resumen</a><span aria-hidden="true">/</span>
+    <a asp-controller="Estudiantes" asp-action="Index">Estudiantes</a><span aria-hidden="true">/</span>
+    <span aria-current="page">@Model.NombreCompleto</span>
+</nav>
+
+<section class="student-profile-heading">
+    <a class="back-link" asp-controller="Estudiantes" asp-action="Index"><span aria-hidden="true">←</span> Volver a estudiantes</a>
+    <div class="profile-identity">
+        <span class="profile-avatar">@string.Join("", Model.NombreCompleto.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(p => p[0].ToString().ToUpperInvariant()))</span>
+        <div>
+            <p class="eyebrow">PROGRESO DEL ESTUDIANTE</p>
+            <h1>@Model.NombreCompleto</h1>
+            <p class="profile-meta">@Model.Correo <span aria-hidden="true">·</span> @(Model.CodigoInstitucional ?? "Sin código institucional")</p>
+            @if (!string.IsNullOrWhiteSpace(Model.CursoCohorte))
+            {
+                <p class="profile-course">@Model.CursoCohorte</p>
+            }
+        </div>
+    </div>
+</section>
+
+@if (Model.UsaDatosDemo)
+{
+    <div class="notice notice-demo" role="status">
+        <span class="notice-mark" aria-hidden="true">i</span>
+        <span>Datos ficticios de demostración; no representan calificaciones reales.</span>
+    </div>
+}
+
+<section class="metric-grid detail-metrics" aria-label="Indicadores del estudiante">
+    <article class="metric-card">
+        <div class="metric-icon icon-purple" aria-hidden="true">▤</div>
+        <div><p>Partidas registradas</p><strong>@Model.TotalPartidas</strong><span>@Model.PartidasFinalizadas finalizadas</span></div>
+    </article>
+    <article class="metric-card">
+        <div class="metric-icon icon-green" aria-hidden="true">↗</div>
+        <div><p>Puntuación promedio</p><strong>@(Model.PromedioPuntuacion?.ToString("0.0") ?? "—")<small>@(Model.PromedioPuntuacion.HasValue ? " pts" : "")</small></strong><span>en partidas con resultado</span></div>
+    </article>
+    <article class="metric-card">
+        <div class="metric-icon icon-orange" aria-hidden="true">★</div>
+        <div><p>Mejor puntuación</p><strong>@(Model.MejorPuntuacion?.ToString("0.0") ?? "—")<small>@(Model.MejorPuntuacion.HasValue ? " pts" : "")</small></strong><span>mejor resultado registrado</span></div>
+    </article>
+    <article class="metric-card">
+        <div class="metric-icon icon-blue" aria-hidden="true">◷</div>
+        <div><p>Última actividad</p><strong class="metric-date">@(Model.UltimaActividad?.ToLocalTime().ToString("dd MMM yyyy") ?? "—")</strong><span>@(Model.NivelAlcanzado ?? "Sin partidas registradas")</span></div>
+    </article>
+</section>
+
+@if (!Model.TieneProgreso)
+{
+    <section class="panel empty-state detail-empty">
+        <span class="empty-icon" aria-hidden="true">⌁</span>
+        <strong>Este estudiante aún no registra partidas</strong>
+        <p>Cuando complete una sesión de juego y sus resultados se sincronicen, podrás consultar aquí su progreso.</p>
+    </section>
+}
+else
+{
+    <div class="dashboard-grid detail-grid">
+        <section class="panel progress-panel">
+            <div class="panel-heading">
+                <div><h2>Evolución de puntuación</h2><p>Puntuación global por partida con KPI</p></div>
+                @if (!string.IsNullOrWhiteSpace(Model.Dificultad))
+                {
+                    <span class="difficulty-tag">@Model.Dificultad</span>
+                }
+            </div>
+            @if (Model.Evolucion.Count == 0)
+            {
+                <div class="empty-state compact-empty"><strong>Sin puntuaciones disponibles</strong><p>Las partidas aún no tienen KPI asociados.</p></div>
+            }
+            else
+            {
+                var values = Model.Evolucion.Select(p => p.Puntuacion).ToList();
+                var max = Math.Max(100m, values.Max());
+                var points = string.Join(" ", values.Select((value, index) =>
+                    string.Join(",", (values.Count == 1 ? 300m : 30m + (540m * index / (values.Count - 1)))
+                        .ToString("0.##", System.Globalization.CultureInfo.InvariantCulture),
+                        (160m - (value / max * 130m)).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture))));
+                <div class="chart-wrap">
+                    <div class="chart-scale"><span>100</span><span>50</span><span>0</span></div>
+                    <svg class="line-chart" viewBox="0 0 600 180" role="img" aria-label="Evolución de la puntuación del estudiante">
+                        <line x1="30" y1="30" x2="570" y2="30" class="chart-gridline" />
+                        <line x1="30" y1="95" x2="570" y2="95" class="chart-gridline" />
+                        <line x1="30" y1="160" x2="570" y2="160" class="chart-gridline" />
+                        @if (values.Count > 1)
+                        {
+                            <polyline points="@points" class="chart-line" />
+                        }
+                        @foreach (var (point, index) in Model.Evolucion.Select((point, index) => (point, index)))
+                        {
+                            var x = values.Count == 1 ? 300 : 30 + (540m * index / (values.Count - 1));
+                            var y = 160m - (point.Puntuacion / max * 130m);
+                            <circle cx="@x.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)"
+                                    cy="@y.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)"
+                                    r="4" class="chart-dot">
+                                <title>@point.Etiqueta: @point.Puntuacion.ToString("0.0") puntos</title>
+                            </circle>
+                        }
+                    </svg>
+                </div>
+                <div class="chart-labels">
+                    @foreach (var point in Model.Evolucion)
+                    {
+                        <span>@point.Etiqueta</span>
+                    }
+                </div>
+            }
+        </section>
+
+        <section class="panel latest-result-panel">
+            <div class="panel-heading"><div><h2>Último resultado</h2><p>@(Model.UltimaActividad?.ToLocalTime().ToString("dd/MM/yyyy") ?? "")</p></div></div>
+            <div class="latest-score">
+                <strong>@(Model.UltimaPuntuacionGlobal?.ToString("0.0") ?? "—")</strong>
+                <span>puntos</span>
+            </div>
+            <dl class="result-list">
+                <div><dt>Entregas a tiempo</dt><dd>@(Model.UltimoPctEntregasATiempo?.ToString("0.#") is { } onTime ? $"{onTime}%" : "—")</dd></div>
+                <div><dt>Utilización de recursos</dt><dd>@(Model.UltimaUtilizacionRecursos?.ToString("0.#") is { } resources ? $"{resources}%" : "—")</dd></div>
+                <div><dt>Eficiencia de rutas</dt><dd>@(Model.UltimaEficienciaRutas?.ToString("0.#") is { } routes ? $"{routes}%" : "—")</dd></div>
+                <div><dt>Costo total</dt><dd>@(Model.UltimoCostoTotal?.ToString("C2", System.Globalization.CultureInfo.GetCultureInfo("es-EC")) ?? "—")</dd></div>
+            </dl>
+        </section>
+    </div>
+
+    <section class="panel history-panel">
+        <div class="panel-heading">
+            <div><h2>Historial de partidas</h2><p>Resultados registrados para este estudiante</p></div>
+            <span class="count-pill">@(Model.Historial.Count == 1 ? "1 partida" : $"{Model.Historial.Count} partidas")</span>
+        </div>
+        <div class="table-scroll">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th scope="col">Fecha</th>
+                        <th scope="col">Escenario</th>
+                        <th scope="col">Nivel</th>
+                        <th scope="col">Estado</th>
+                        <th scope="col">Entregas a tiempo</th>
+                        <th scope="col">Puntuación</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var partida in Model.Historial)
+                    {
+                        <tr>
+                            <td>@partida.Fecha.ToLocalTime().ToString("dd/MM/yyyy")</td>
+                            <td><strong>@partida.EscenarioNombre</strong><small class="table-secondary">@partida.Dificultad</small></td>
+                            <td>Nivel @partida.NivelNumero</td>
+                            <td><span class="progress-status @(partida.Finalizada ? "has-progress" : "no-progress")"><i aria-hidden="true"></i>@(partida.Finalizada ? "Finalizada" : "En curso")</span></td>
+                            <td>@(partida.PctEntregasATiempo?.ToString("0.#") is { } pct ? $"{pct}%" : "—")</td>
+                            <td><strong>@(partida.PuntuacionGlobal?.ToString("0.0") ?? "—")</strong></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+}
