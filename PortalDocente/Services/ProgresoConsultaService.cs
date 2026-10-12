@@ -17,11 +17,14 @@ public class ProgresoConsultaService : IProgresoConsultaService
 
     private bool UsaDatosDemo => _configuration.GetValue("Demo:UseInMemoryData", true);
 
+    private static IQueryable<Guid> EstudiantesDelDocente(PortalDbContext db, Guid docenteId) =>
+        db.Estudiantes
+            .Where(e => e.Matriculas.Any(m => m.Cohorte.DocenteId == docenteId && m.Estado == "activo"))
+            .Select(e => e.Id);
+
     public async Task<DashboardViewModel> ObtenerDashboardAsync(Guid docenteId, CancellationToken cancellationToken = default)
     {
-        var estudianteIds = _db.Estudiantes
-            .Where(e => e.Matriculas.Any(m => m.Cohorte.DocenteId == docenteId))
-            .Select(e => e.Id);
+        var estudianteIds = EstudiantesDelDocente(_db, docenteId);
 
         var totalEstudiantes = await estudianteIds.CountAsync(cancellationToken);
         var conProgreso = await _db.Partidas
@@ -127,7 +130,7 @@ public class ProgresoConsultaService : IProgresoConsultaService
     {
         var query = _db.Estudiantes
             .AsNoTracking()
-            .Where(e => e.Matriculas.Any(m => m.Cohorte.DocenteId == docenteId))
+            .Where(e => e.Matriculas.Any(m => m.Cohorte.DocenteId == docenteId && m.Estado == "activo"))
             .Include(e => e.Usuario)
             .Include(e => e.Matriculas)
                 .ThenInclude(m => m.Cohorte)
@@ -136,12 +139,11 @@ public class ProgresoConsultaService : IProgresoConsultaService
 
         if (!string.IsNullOrWhiteSpace(busqueda))
         {
-            var termino = busqueda.Trim().ToLowerInvariant();
+            var termino = busqueda.Trim().ToLower();
             query = query.Where(e =>
                 e.Usuario.NombreCompleto.ToLower().Contains(termino) ||
                 e.Usuario.Correo.ToLower().Contains(termino) ||
-                (e.CodigoInstitucional != null && e.CodigoInstitucional.ToLower().Contains(termino)) ||
-                e.Id.ToString().ToLower().Contains(termino));
+                (e.CodigoInstitucional != null && e.CodigoInstitucional.ToLower().Contains(termino)));
         }
 
         var estudiantes = await query
@@ -165,7 +167,7 @@ public class ProgresoConsultaService : IProgresoConsultaService
 
             var ultima = partidasEst.FirstOrDefault();
             var matricula = e.Matriculas
-                .Where(m => m.Cohorte.DocenteId == docenteId)
+                .Where(m => m.Cohorte.DocenteId == docenteId && m.Estado == "activo")
                 .OrderByDescending(m => m.MatriculadoEn)
                 .FirstOrDefault();
             var cursoCohorte = matricula == null
@@ -199,7 +201,7 @@ public class ProgresoConsultaService : IProgresoConsultaService
     {
         var estudiante = await _db.Estudiantes
             .AsNoTracking()
-            .Where(e => e.Matriculas.Any(m => m.Cohorte.DocenteId == docenteId))
+            .Where(e => e.Matriculas.Any(m => m.Cohorte.DocenteId == docenteId && m.Estado == "activo"))
             .Include(e => e.Usuario)
             .Include(e => e.Matriculas)
                 .ThenInclude(m => m.Cohorte)
@@ -219,7 +221,7 @@ public class ProgresoConsultaService : IProgresoConsultaService
             .ToListAsync(cancellationToken);
 
         var matricula = estudiante.Matriculas
-            .Where(m => m.Cohorte.DocenteId == docenteId)
+            .Where(m => m.Cohorte.DocenteId == docenteId && m.Estado == "activo")
             .OrderByDescending(m => m.MatriculadoEn)
             .FirstOrDefault();
         var cursoCohorte = matricula == null
@@ -298,15 +300,26 @@ public class ProgresoConsultaService : IProgresoConsultaService
     public async Task<(bool ok, Guid? docenteId, string? nombreDocente, string? error)> ValidarDocenteAsync(
         string correo, string password, CancellationToken cancellationToken = default)
     {
+        var correoNormalizado = correo.Trim().ToLower();
         var usuario = await _db.Usuarios
             .AsNoTracking()
             .Include(u => u.Docente)
-            .FirstOrDefaultAsync(u => u.Correo == correo && u.Activo, cancellationToken);
+            .FirstOrDefaultAsync(u => u.Correo.ToLower() == correoNormalizado && u.Activo, cancellationToken);
 
         if (usuario?.Docente == null)
             return (false, null, null, "Credenciales incorrectas o la cuenta no es de docente.");
 
-        if (!BCrypt.Net.BCrypt.Verify(password, usuario.PasswordHash))
+        bool claveValida;
+        try
+        {
+            claveValida = BCrypt.Net.BCrypt.Verify(password, usuario.PasswordHash);
+        }
+        catch (BCrypt.Net.SaltParseException)
+        {
+            claveValida = false;
+        }
+
+        if (!claveValida)
             return (false, null, null, "Credenciales incorrectas o la cuenta no es de docente.");
 
         return (true, usuario.Docente.Id, usuario.NombreCompleto, null);

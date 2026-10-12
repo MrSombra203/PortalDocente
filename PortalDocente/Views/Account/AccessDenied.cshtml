@@ -1,0 +1,17 @@
+@{
+    ViewData["Title"] = "Acceso denegado";
+}
+
+<div class="login-page">
+    <section class="login-form-side" style="margin:auto">
+        <div class="login-form-card">
+            <p class="eyebrow">ACCESO RESTRINGIDO</p>
+            <h2>No puedes entrar a este portal</h2>
+            <p class="page-subtitle">El Portal Docente es exclusivo para cuentas con rol de docente.</p>
+            <form asp-controller="Account" asp-action="Logout" method="post">
+                @Html.AntiForgeryToken()
+                <button class="button button-primary login-submit" type="submit">Volver al inicio de sesión</button>
+            </form>
+        </div>
+    </section>
+</div>

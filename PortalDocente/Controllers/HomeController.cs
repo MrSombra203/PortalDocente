@@ -1,13 +1,13 @@
 using System.Diagnostics;
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PortalDocente.Models;
+using PortalDocente.Security;
 using PortalDocente.Services;
 
 namespace PortalDocente.Controllers;
 
-[Authorize(Roles = "docente")]
+[Authorize(Roles = ClaimsPrincipalExtensions.RolDocente)]
 public class HomeController : Controller
 {
     private readonly IProgresoConsultaService _progresoService;
@@ -19,7 +19,7 @@ public class HomeController : Controller
 
     public async Task<IActionResult> Index(CancellationToken cancellationToken)
     {
-        if (!Guid.TryParse(User.FindFirstValue("docente_id"), out var docenteId))
+        if (!User.TryGetDocenteId(out var docenteId))
             return Forbid();
 
         var model = await _progresoService.ObtenerDashboardAsync(docenteId, cancellationToken);

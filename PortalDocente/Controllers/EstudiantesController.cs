@@ -1,11 +1,11 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
+using PortalDocente.Security;
 using PortalDocente.Services;
 
 namespace PortalDocente.Controllers;
 
-[Authorize(Roles = "docente")]
+[Authorize(Roles = ClaimsPrincipalExtensions.RolDocente)]
 public class EstudiantesController : Controller
 {
     private readonly IProgresoConsultaService _progresoService;
@@ -18,7 +18,7 @@ public class EstudiantesController : Controller
     [HttpGet]
     public async Task<IActionResult> Index(string? q, CancellationToken cancellationToken)
     {
-        if (!Guid.TryParse(User.FindFirstValue("docente_id"), out var docenteId))
+        if (!User.TryGetDocenteId(out var docenteId))
             return Forbid();
 
         var model = await _progresoService.ListarEstudiantesAsync(docenteId, q, cancellationToken);
@@ -28,7 +28,10 @@ public class EstudiantesController : Controller
     [HttpGet]
     public async Task<IActionResult> Progreso(Guid id, CancellationToken cancellationToken)
     {
-        if (!Guid.TryParse(User.FindFirstValue("docente_id"), out var docenteId))
+        if (id == Guid.Empty)
+            return NotFound();
+
+        if (!User.TryGetDocenteId(out var docenteId))
             return Forbid();
 
         var model = await _progresoService.ObtenerProgresoAsync(docenteId, id, cancellationToken);

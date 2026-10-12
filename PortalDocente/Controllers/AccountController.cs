@@ -3,7 +3,8 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using PortalDocente.Data;
+using Microsoft.AspNetCore.RateLimiting;
+using PortalDocente.Security;
 using PortalDocente.Models.ViewModels;
 using PortalDocente.Services;
 
@@ -22,31 +23,33 @@ public class AccountController : Controller
 
     [HttpGet]
     [AllowAnonymous]
-    public IActionResult Login(string? returnUrl = null)
+    public IActionResult Login(string? returnUrl = null, int? limitado = null)
     {
-        var usaDemo = _configuration.GetValue("Demo:UseInMemoryData", true);
-        return View(new LoginViewModel
-        {
-            MensajeDemo = usaDemo
-                ? $"Acceso temporal de demo: {DemoDataSeeder.DemoDocenteCorreo} / {DemoDataSeeder.DemoDocentePassword}"
-                : "Ingresa con una cuenta docente registrada en la base central."
-        });
+        if (User.Identity?.IsAuthenticated == true && User.IsInRole(ClaimsPrincipalExtensions.RolDocente))
+            return RedirectToAction("Index", "Home");
+
+        var model = CrearLoginViewModel();
+        if (limitado == 1)
+            ModelState.AddModelError(string.Empty, "Demasiados intentos de ingreso. Espera unos minutos e inténtalo de nuevo.");
+
+        ViewData["ReturnUrl"] = returnUrl;
+        return View(model);
     }
 
     [HttpPost]
     [AllowAnonymous]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting("login")]
     public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null, CancellationToken cancellationToken = default)
     {
-        model.MensajeDemo = _configuration.GetValue("Demo:UseInMemoryData", true)
-            ? $"Acceso temporal de demo: {DemoDataSeeder.DemoDocenteCorreo} / {DemoDataSeeder.DemoDocentePassword}"
-            : null;
+        model.MensajeDemo = CrearLoginViewModel().MensajeDemo;
+        ViewData["ReturnUrl"] = returnUrl;
 
         if (!ModelState.IsValid)
             return View(model);
 
         var (ok, docenteId, nombre, error) = await _progresoService.ValidarDocenteAsync(
-            model.Correo.Trim(), model.Password, cancellationToken);
+            model.Correo, model.Password, cancellationToken);
         if (!ok || docenteId is null)
         {
             ModelState.AddModelError(string.Empty, error ?? "No se pudo iniciar sesión.");
@@ -55,11 +58,11 @@ public class AccountController : Controller
 
         var claims = new List<Claim>
         {
-            new(ClaimTypes.Name, nombre ?? model.Correo),
+            new(ClaimTypes.NameIdentifier, docenteId.Value.ToString()),
+            new(ClaimTypes.Name, nombre ?? model.Correo.Trim()),
             new(ClaimTypes.Email, model.Correo.Trim()),
-            new(ClaimTypes.Role, "docente"),
-            new("docente_id", docenteId.Value.ToString()),
-            new("demo_temporal", _configuration.GetValue("Demo:UseInMemoryData", true) ? "true" : "false")
+            new(ClaimTypes.Role, ClaimsPrincipalExtensions.RolDocente),
+            new(ClaimsPrincipalExtensions.DocenteIdClaim, docenteId.Value.ToString())
         };
 
         var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
@@ -78,12 +81,30 @@ public class AccountController : Controller
         return RedirectToAction("Index", "Home");
     }
 
-    [Authorize(Roles = "docente")]
+    [HttpGet]
+    [AllowAnonymous]
+    public IActionResult AccessDenied()
+    {
+        return View();
+    }
+
     [HttpPost]
+    [AllowAnonymous]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Logout()
     {
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         return RedirectToAction(nameof(Login));
+    }
+
+    private LoginViewModel CrearLoginViewModel()
+    {
+        var usaDemo = _configuration.GetValue("Demo:UseInMemoryData", true);
+        return new LoginViewModel
+        {
+            MensajeDemo = usaDemo
+                ? "Entorno de demostración. Usa la cuenta docente descrita en el README del proyecto; la contraseña no se muestra en pantalla."
+                : null
+        };
     }
 }

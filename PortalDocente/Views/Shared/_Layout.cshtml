@@ -1,7 +1,7 @@
 @{
     var controller = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
     var action = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
-    var autenticado = User.Identity?.IsAuthenticated == true;
+    var autenticado = User.Identity?.IsAuthenticated == true && User.IsInRole("docente");
     var esLogin = string.Equals(controller, "Account", StringComparison.OrdinalIgnoreCase)
                   && string.Equals(action, "Login", StringComparison.OrdinalIgnoreCase);
 }

@@ -15,7 +15,11 @@ En modo demo, la aplicación carga datos ficticios en una base EF Core InMemory.
 - Correo: `docente.demo@udla.edu.ec`
 - Contraseña: `DemoPortal2026!`
 
-La interfaz identifica los datos como demostrativos. Estas credenciales no deben usarse en un entorno real.
+La interfaz identifica los datos como demostrativos y **no muestra la contraseña en pantalla**. Estas credenciales no deben usarse en un entorno real. Preferible configurar la cadena PostgreSQL con User Secrets:
+
+```powershell
+dotnet user-secrets set "ConnectionStrings:PortalCentral" "Host=localhost;Port=5432;Database=portal_docente;Username=<usuario>;Password=<contraseña>" --project .\PortalDocente\PortalDocente.csproj
+```
 
 ## Conectar la base central
 
