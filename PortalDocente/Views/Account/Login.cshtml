@@ -27,13 +27,21 @@
                 <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
                 <div asp-validation-summary="ModelOnly" class="validation-summary" role="alert"></div>
                 <div class="form-field">
-                    <label asp-for="Correo"></label>
-                    <input asp-for="Correo" autocomplete="username" placeholder="nombre@udla.edu.ec" />
+                    <div class="animated-input-container">
+                        <input asp-for="Correo" class="animated-input" autocomplete="username" placeholder=" " />
+                        <label asp-for="Correo" class="animated-label"></label>
+                        <span class="animated-input-topline" aria-hidden="true"></span>
+                        <span class="animated-input-underline" aria-hidden="true"></span>
+                    </div>
                     <span asp-validation-for="Correo" class="field-error"></span>
                 </div>
                 <div class="form-field">
-                    <label asp-for="Password"></label>
-                    <input asp-for="Password" autocomplete="current-password" placeholder="Tu contraseña" />
+                    <div class="animated-input-container">
+                        <input asp-for="Password" class="animated-input" autocomplete="current-password" placeholder=" " />
+                        <label asp-for="Password" class="animated-label"></label>
+                        <span class="animated-input-topline" aria-hidden="true"></span>
+                        <span class="animated-input-underline" aria-hidden="true"></span>
+                    </div>
                     <span asp-validation-for="Password" class="field-error"></span>
                 </div>
                 <button class="button button-primary login-submit" type="submit">Entrar al portal <span aria-hidden="true">→</span></button>
