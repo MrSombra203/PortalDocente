@@ -8,9 +8,6 @@ public class DashboardViewModel
     public int TotalPartidas { get; set; }
     public int PartidasFinalizadas { get; set; }
     public decimal? PromedioPuntuacionReciente { get; set; }
-    public bool UsaDatosDemo { get; set; }
-    public string? MensajeFuenteDatos { get; set; }
-
     public IReadOnlyList<DashboardEstudianteDestacadoViewModel> EstudiantesDestacados { get; set; }
         = Array.Empty<DashboardEstudianteDestacadoViewModel>();
 

@@ -1,34 +1,35 @@
 # Portal Docente UDLA
 
-Demo de solo lectura para que el docente consulte el progreso de estudiantes: resumen de actividad, búsqueda por estudiante, resultados KPI e historial de partidas. No administra cursos ni escenarios y no modifica resultados.
+Portal de consulta para docentes: resumen de actividad, búsqueda y seguimiento de estudiantes, resultados KPI e historial de partidas. Toda la información funcional se consulta desde PostgreSQL. El portal no incluye administración de cursos ni operaciones para crear, editar o eliminar registros.
 
-## Ejecutar la demo
+## Requisitos y ejecución
 
-Requiere el SDK de .NET 10.
+- .NET SDK 10
+- PostgreSQL con la base `portal_docente` y el esquema existente del sistema
+
+En desarrollo, `appsettings.Development.json` configura el host local, puerto, base y usuario. Guarda la contraseña únicamente en User Secrets:
 
 ```powershell
+dotnet user-secrets set "ConnectionStrings:PortalCentral" "Host=localhost;Port=5432;Database=portal_docente;Username=postgres;Password=<tu-contraseña>" --project .\PortalDocente\PortalDocente.csproj
 dotnet run --project .\PortalDocente\PortalDocente.csproj
 ```
 
-En modo demo, la aplicación carga datos ficticios en una base EF Core InMemory. Acceso:
+Si ya configuraste User Secrets en este equipo, basta iniciar el proyecto con F5 o ejecutar el segundo comando. No guardes credenciales en `appsettings*.json` ni las compartas en el repositorio.
 
-- Correo: `docente.demo@udla.edu.ec`
-- Contraseña: `DemoPortal2026!`
+En otros ambientes, configura `ConnectionStrings__PortalCentral` como variable de entorno. Si PostgreSQL no está disponible durante el inicio, el portal registra el error y permanece iniciado; una solicitud que requiera la base devuelve una página de error genérica. Sin cadena de conexión, el inicio falla con un error de configuración explícito.
 
-La interfaz identifica los datos como demostrativos y **no muestra la contraseña en pantalla**. Estas credenciales no deben usarse en un entorno real. Preferible configurar la cadena PostgreSQL con User Secrets:
+## Datos y acceso
+
+El login consulta `usuarios`, comprueba que la cuenta esté activa, que tenga perfil en `docentes` y que `usuarios_roles` la vincule con el rol `docente` existente en `roles`. La contraseña se verifica con BCrypt; el portal no crea ni restablece credenciales.
+
+El dashboard, la búsqueda, la paginación y los perfiles consultan los registros de PostgreSQL. Los listados se filtran por cohortes activas asignadas al docente autenticado. Los estados vacíos reflejan que la consulta no encontró registros; no se sustituyen por datos ficticios.
+
+La aplicación no crea ni modifica tablas ni ejecuta migraciones. El esquema se administra en PostgreSQL; no ejecutes `dotnet ef database update` para este proyecto. El portal es de solo lectura para la información académica.
+
+## Pruebas
+
+Los datos sintéticos y el proveedor EF Core InMemory se usan únicamente en el proyecto de pruebas; no forman parte de la aplicación. Ejecuta:
 
 ```powershell
-dotnet user-secrets set "ConnectionStrings:PortalCentral" "Host=localhost;Port=5432;Database=portal_docente;Username=<usuario>;Password=<contraseña>" --project .\PortalDocente\PortalDocente.csproj
+dotnet test .\PortalDocente.slnx
 ```
-
-## Conectar la base central
-
-El portal lee el esquema PostgreSQL central del proyecto. Antes de iniciar, aplica el script **Base potal web.sql** a la base `portal_docente` y configura variables de entorno; no guardes credenciales en `appsettings*.json`.
-
-```powershell
-$env:Demo__UseInMemoryData = "false"
-$env:ConnectionStrings__PortalCentral = "Host=localhost;Port=5432;Database=portal_docente;Username=<usuario>;Password=<contraseña>"
-dotnet run --project .\PortalDocente\PortalDocente.csproj
-```
-
-`Base de datos local.sql` corresponde al almacenamiento offline del cliente/simulador. El portal no se conecta directamente a esa base: consulta los resultados que ya fueron sincronizados al esquema central.

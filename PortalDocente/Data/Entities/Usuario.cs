@@ -13,4 +13,5 @@ public class Usuario
 
     public Estudiante? Estudiante { get; set; }
     public Docente? Docente { get; set; }
+    public ICollection<UsuarioRol> Roles { get; set; } = new List<UsuarioRol>();
 }

@@ -16,6 +16,9 @@ public class EstudianteListItemViewModel
 public class EstudiantesIndexViewModel
 {
     public string? Busqueda { get; set; }
-    public bool UsaDatosDemo { get; set; }
+    public int TotalEstudiantes { get; set; }
+    public int PaginaActual { get; set; } = 1;
+    public int TotalPaginas { get; set; } = 1;
+    public int TamanioPagina { get; set; } = 25;
     public IReadOnlyList<EstudianteListItemViewModel> Estudiantes { get; set; } = Array.Empty<EstudianteListItemViewModel>();
 }

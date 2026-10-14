@@ -12,18 +12,6 @@
     <a class="button button-primary" asp-controller="Estudiantes" asp-action="Index">Ver estudiantes <span aria-hidden="true">→</span></a>
 </section>
 
-@if (Model.UsaDatosDemo)
-{
-    <div class="notice notice-demo" role="status">
-        <span class="notice-mark" aria-hidden="true">i</span>
-        <span><strong>Entorno de demostración.</strong> Los nombres y resultados mostrados son ficticios.</span>
-    </div>
-}
-else if (!string.IsNullOrWhiteSpace(Model.MensajeFuenteDatos))
-{
-    <div class="notice notice-info" role="status">@Model.MensajeFuenteDatos</div>
-}
-
 <section class="metric-grid" aria-label="Indicadores del curso">
     <article class="metric-card">
         <div class="metric-icon icon-purple" aria-hidden="true">◎</div>

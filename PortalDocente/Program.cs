@@ -21,28 +21,22 @@ builder.Services.AddAntiforgery(options =>
     options.Cookie.SameSite = SameSiteMode.Lax;
 });
 
-var useInMemory = builder.Configuration.GetValue("Demo:UseInMemoryData", true);
 var connectionString = builder.Configuration.GetConnectionString("PortalCentral");
 
-if (!useInMemory && string.IsNullOrWhiteSpace(connectionString))
+if (string.IsNullOrWhiteSpace(connectionString))
 {
     throw new InvalidOperationException(
-        "Configura ConnectionStrings:PortalCentral o habilita Demo:UseInMemoryData para iniciar el portal.");
+        "Configura ConnectionStrings:PortalCentral para iniciar el portal.");
 }
 
-builder.Services.AddDbContext<PortalDbContext>(options =>
+builder.Services.AddSingleton(_ =>
 {
-    if (useInMemory)
-    {
-        options.UseInMemoryDatabase("PortalDocenteDemo");
-    }
-    else
-    {
-        var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
-        dataSourceBuilder.EnableUnmappedTypes();
-        options.UseNpgsql(dataSourceBuilder.Build());
-    }
+    var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
+    dataSourceBuilder.EnableUnmappedTypes();
+    return dataSourceBuilder.Build();
 });
+builder.Services.AddDbContext<PortalDbContext>((services, options) =>
+    options.UseNpgsql(services.GetRequiredService<NpgsqlDataSource>()));
 
 builder.Services
     .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -95,19 +89,24 @@ builder.Services.AddRateLimiter(options =>
 
 var app = builder.Build();
 
-if (useInMemory)
+try
 {
-    using var scope = app.Services.CreateScope();
+    await using var scope = app.Services.CreateAsyncScope();
     var db = scope.ServiceProvider.GetRequiredService<PortalDbContext>();
-    await DemoDataSeeder.SeedAsync(db);
+    if (!await db.Database.CanConnectAsync())
+        app.Logger.LogWarning("PostgreSQL no está disponible. El portal permanecerá iniciado y registrará errores de solicitudes.");
+}
+catch (NpgsqlException exception)
+{
+    app.Logger.LogError(exception, "No fue posible conectar con PostgreSQL al iniciar. El portal permanecerá iniciado.");
 }
 
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 }
 
+app.UseExceptionHandler("/Home/Error");
 app.UseHttpsRedirection();
 app.Use(async (context, next) =>
 {

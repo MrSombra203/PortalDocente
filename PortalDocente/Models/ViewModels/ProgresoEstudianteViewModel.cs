@@ -8,8 +8,6 @@ public class ProgresoEstudianteViewModel
     public string? CodigoInstitucional { get; set; }
     public string? CursoCohorte { get; set; }
     public bool TieneProgreso { get; set; }
-    public bool UsaDatosDemo { get; set; }
-
     public int TotalPartidas { get; set; }
     public int PartidasFinalizadas { get; set; }
     public DateTimeOffset? UltimaActividad { get; set; }

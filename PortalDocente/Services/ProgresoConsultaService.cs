@@ -1,21 +1,18 @@
 using Microsoft.EntityFrameworkCore;
 using PortalDocente.Data;
 using PortalDocente.Models.ViewModels;
+using PortalDocente.Security;
 
 namespace PortalDocente.Services;
 
 public class ProgresoConsultaService : IProgresoConsultaService
 {
     private readonly PortalDbContext _db;
-    private readonly IConfiguration _configuration;
 
-    public ProgresoConsultaService(PortalDbContext db, IConfiguration configuration)
+    public ProgresoConsultaService(PortalDbContext db)
     {
         _db = db;
-        _configuration = configuration;
     }
-
-    private bool UsaDatosDemo => _configuration.GetValue("Demo:UseInMemoryData", true);
 
     private static IQueryable<Guid> EstudiantesDelDocente(PortalDbContext db, Guid docenteId) =>
         db.Estudiantes
@@ -115,10 +112,6 @@ public class ProgresoConsultaService : IProgresoConsultaService
             PromedioPuntuacionReciente = puntuacionesRecientes.Count > 0
                 ? puntuacionesRecientes.Average()
                 : null,
-            UsaDatosDemo = UsaDatosDemo,
-            MensajeFuenteDatos = UsaDatosDemo
-                ? "Fuente: datos de demostración (InMemory). No son resultados reales de estudiantes."
-                : "Fuente: base de datos central (PostgreSQL).",
             EstudiantesDestacados = destacados,
             ActividadReciente = actividad,
             EvolucionGeneral = evolucion
@@ -126,15 +119,11 @@ public class ProgresoConsultaService : IProgresoConsultaService
     }
 
     public async Task<EstudiantesIndexViewModel> ListarEstudiantesAsync(
-        Guid docenteId, string? busqueda, CancellationToken cancellationToken = default)
+        Guid docenteId, string? busqueda, int pagina = 1, CancellationToken cancellationToken = default)
     {
         var query = _db.Estudiantes
             .AsNoTracking()
             .Where(e => e.Matriculas.Any(m => m.Cohorte.DocenteId == docenteId && m.Estado == "activo"))
-            .Include(e => e.Usuario)
-            .Include(e => e.Matriculas)
-                .ThenInclude(m => m.Cohorte)
-                    .ThenInclude(c => c.Curso)
             .AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(busqueda))
@@ -146,8 +135,20 @@ public class ProgresoConsultaService : IProgresoConsultaService
                 (e.CodigoInstitucional != null && e.CodigoInstitucional.ToLower().Contains(termino)));
         }
 
+        const int tamanioPagina = 25;
+        var totalEstudiantes = await query.CountAsync(cancellationToken);
+        var totalPaginas = Math.Max(1, (int)Math.Ceiling(totalEstudiantes / (double)tamanioPagina));
+        pagina = Math.Clamp(pagina, 1, totalPaginas);
+
         var estudiantes = await query
+            .Include(e => e.Usuario)
+            .Include(e => e.Matriculas)
+                .ThenInclude(m => m.Cohorte)
+                    .ThenInclude(c => c.Curso)
             .OrderBy(e => e.Usuario.NombreCompleto)
+            .ThenBy(e => e.Id)
+            .Skip((pagina - 1) * tamanioPagina)
+            .Take(tamanioPagina)
             .ToListAsync(cancellationToken);
 
         var estudianteIds = estudiantes.Select(e => e.Id).ToList();
@@ -191,7 +192,10 @@ public class ProgresoConsultaService : IProgresoConsultaService
         return new EstudiantesIndexViewModel
         {
             Busqueda = busqueda,
-            UsaDatosDemo = UsaDatosDemo,
+            TotalEstudiantes = totalEstudiantes,
+            PaginaActual = pagina,
+            TotalPaginas = totalPaginas,
+            TamanioPagina = tamanioPagina,
             Estudiantes = items
         };
     }
@@ -235,7 +239,6 @@ public class ProgresoConsultaService : IProgresoConsultaService
             Correo = estudiante.Usuario.Correo,
             CodigoInstitucional = estudiante.CodigoInstitucional,
             CursoCohorte = cursoCohorte,
-            UsaDatosDemo = UsaDatosDemo,
             TieneProgreso = partidas.Count > 0,
             TotalPartidas = partidas.Count,
             PartidasFinalizadas = partidas.Count(p => p.Finalizada),
@@ -297,17 +300,23 @@ public class ProgresoConsultaService : IProgresoConsultaService
         return vm;
     }
 
-    public async Task<(bool ok, Guid? docenteId, string? nombreDocente, string? error)> ValidarDocenteAsync(
-        string correo, string password, CancellationToken cancellationToken = default)
+    public async Task<(bool ok, Guid? usuarioId, Guid? docenteId, string? correo, string? nombreDocente, string? rol, string? error)>
+        ValidarDocenteAsync(string correo, string password, CancellationToken cancellationToken = default)
     {
-        var correoNormalizado = correo.Trim().ToLower();
+        var correoNormalizado = correo.Trim().ToLowerInvariant();
         var usuario = await _db.Usuarios
             .AsNoTracking()
             .Include(u => u.Docente)
-            .FirstOrDefaultAsync(u => u.Correo.ToLower() == correoNormalizado && u.Activo, cancellationToken);
+            .Include(u => u.Roles)
+                .ThenInclude(ur => ur.Rol)
+            .FirstOrDefaultAsync(
+                u => u.Correo.ToLower() == correoNormalizado
+                     && u.Activo
+                     && u.Roles.Any(ur => ur.Rol.Nombre == ClaimsPrincipalExtensions.RolDocente),
+                cancellationToken);
 
         if (usuario?.Docente == null)
-            return (false, null, null, "Credenciales incorrectas o la cuenta no es de docente.");
+            return (false, null, null, null, null, null, "Credenciales incorrectas o la cuenta no es de docente.");
 
         bool claveValida;
         try
@@ -320,9 +329,12 @@ public class ProgresoConsultaService : IProgresoConsultaService
         }
 
         if (!claveValida)
-            return (false, null, null, "Credenciales incorrectas o la cuenta no es de docente.");
+            return (false, null, null, null, null, null, "Credenciales incorrectas o la cuenta no es de docente.");
 
-        return (true, usuario.Docente.Id, usuario.NombreCompleto, null);
+        var rol = usuario.Roles
+            .Select(usuarioRol => usuarioRol.Rol.Nombre)
+            .Single(nombreRol => nombreRol == ClaimsPrincipalExtensions.RolDocente);
+        return (true, usuario.Id, usuario.Docente.Id, usuario.Correo, usuario.NombreCompleto, rol, null);
     }
 
     private static string ObtenerIniciales(string nombre)

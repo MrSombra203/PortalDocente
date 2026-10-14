@@ -16,12 +16,12 @@ public class EstudiantesController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Index(string? q, CancellationToken cancellationToken)
+    public async Task<IActionResult> Index(string? q, int pagina = 1, CancellationToken cancellationToken = default)
     {
         if (!User.TryGetDocenteId(out var docenteId))
             return Forbid();
 
-        var model = await _progresoService.ListarEstudiantesAsync(docenteId, q, cancellationToken);
+        var model = await _progresoService.ListarEstudiantesAsync(docenteId, q, pagina, cancellationToken);
         return View(model);
     }
 

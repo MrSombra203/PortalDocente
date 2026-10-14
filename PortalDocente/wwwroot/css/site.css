@@ -172,12 +172,6 @@ h2 { margin-bottom: 3px; font-size: 16px; font-weight: 700; letter-spacing: -.01
 .text-link, .row-link, .back-link { color: var(--purple); font-size: 12px; font-weight: 700; }
 .text-link:hover, .row-link:hover, .back-link:hover { color: #392777; text-decoration: underline; }
 
-.notice { display: flex; align-items: center; gap: 11px; margin: 0 0 21px; padding: 12px 15px; border: 1px solid; border-radius: 10px; font-size: 12px; }
-.notice-demo { border-color: #f0dfb7; color: #71551c; background: #fffaf0; }
-.notice-info { border-color: #dcd9ef; color: #4a407c; background: #f5f3fc; }
-.notice-mark { display: grid; width: 21px; height: 21px; flex: 0 0 21px; place-items: center; border-radius: 50%; font-size: 12px; font-weight: 800; }
-.notice-demo .notice-mark { color: #795c1e; background: #f8e8bd; }
-
 .metric-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 15px; margin-bottom: 18px; }
 .metric-card { display: flex; min-height: 122px; align-items: flex-start; gap: 13px; padding: 18px 17px; border: 1px solid var(--line); border-radius: 13px; background: var(--surface); box-shadow: var(--shadow); }
 .metric-icon { display: grid; width: 38px; height: 38px; flex: 0 0 38px; place-items: center; border-radius: 11px; font-size: 19px; font-weight: 700; }
@@ -256,6 +250,9 @@ h2 { margin-bottom: 3px; font-size: 16px; font-weight: 700; letter-spacing: -.01
 .no-progress { color: #898697; background: #f1f0f4; }
 .row-link { white-space: nowrap; }
 .table-caption { margin: 0; padding: 12px 21px; border-top: 1px solid var(--line); color: #9693a3; font-size: 10px; }
+.pagination { display: flex; align-items: center; justify-content: center; gap: 16px; padding: 0 16px 16px; color: var(--muted); font-size: 11px; }
+.pagination-link { padding: 7px 10px; border: 1px solid var(--line); border-radius: 7px; color: var(--ink); text-decoration: none; }
+.pagination-link:hover { border-color: var(--accent); color: var(--accent); }
 .students-panel > .empty-state { border-top: 1px solid var(--line); }
 
 .breadcrumbs { display: flex; flex-wrap: wrap; gap: 9px; margin: 0 0 18px; color: #9996a5; font-size: 10px; }
@@ -297,7 +294,6 @@ h2 { margin-bottom: 3px; font-size: 16px; font-weight: 700; letter-spacing: -.01
 .login-form-card { width: min(420px, 100%); }
 .login-form-card h2 { margin: 0 0 5px; font-size: 28px; letter-spacing: -.03em; }
 .login-form-card > .page-subtitle { margin-bottom: 25px; }
-.login-demo { margin-bottom: 21px; font-size: 11px; line-height: 1.55; overflow-wrap: anywhere; }
 .login-form { display: grid; gap: 17px; }
 .form-field { display: grid; gap: 7px; }
 .form-field label { color: #4f4b5e; font-size: 11px; font-weight: 650; }

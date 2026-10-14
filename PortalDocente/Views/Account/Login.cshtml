@@ -22,14 +22,6 @@
             <h2>Iniciar sesión</h2>
             <p class="page-subtitle">Ingresa con tu cuenta docente para continuar.</p>
 
-            @if (!string.IsNullOrWhiteSpace(Model.MensajeDemo))
-            {
-                <div class="notice notice-demo login-demo" role="note">
-                    <span class="notice-mark" aria-hidden="true">i</span>
-                    <span>@Model.MensajeDemo</span>
-                </div>
-            }
-
             <form asp-controller="Account" asp-action="Login" method="post" class="login-form">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />

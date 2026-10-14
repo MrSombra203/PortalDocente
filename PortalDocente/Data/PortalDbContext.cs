@@ -10,6 +10,8 @@ public class PortalDbContext : DbContext
     }
 
     public DbSet<Usuario> Usuarios => Set<Usuario>();
+    public DbSet<Rol> Roles => Set<Rol>();
+    public DbSet<UsuarioRol> UsuariosRoles => Set<UsuarioRol>();
     public DbSet<Estudiante> Estudiantes => Set<Estudiante>();
     public DbSet<Docente> Docentes => Set<Docente>();
     public DbSet<Curso> Cursos => Set<Curso>();
@@ -35,6 +37,34 @@ public class PortalDbContext : DbContext
             e.Property(x => x.CreadoEn).HasColumnName("creado_en");
             e.Property(x => x.ActualizadoEn).HasColumnName("actualizado_en");
             e.HasIndex(x => x.Correo).IsUnique();
+        });
+
+        modelBuilder.Entity<Rol>(e =>
+        {
+            e.ToTable("roles");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).HasColumnName("id");
+            e.Property(x => x.Nombre).HasColumnName("nombre").HasMaxLength(20).IsRequired();
+            e.Property(x => x.Descripcion).HasColumnName("descripcion").HasMaxLength(200);
+            e.Property(x => x.CreadoEn).HasColumnName("creado_en");
+            e.HasIndex(x => x.Nombre).IsUnique();
+        });
+
+        modelBuilder.Entity<UsuarioRol>(e =>
+        {
+            e.ToTable("usuarios_roles");
+            e.HasKey(x => new { x.UsuarioId, x.RolId });
+            e.Property(x => x.UsuarioId).HasColumnName("usuario_id");
+            e.Property(x => x.RolId).HasColumnName("rol_id");
+            e.Property(x => x.AsignadoEn).HasColumnName("asignado_en");
+            e.HasOne(x => x.Usuario)
+                .WithMany(x => x.Roles)
+                .HasForeignKey(x => x.UsuarioId)
+                .OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.Rol)
+                .WithMany(x => x.Usuarios)
+                .HasForeignKey(x => x.RolId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<Estudiante>(e =>

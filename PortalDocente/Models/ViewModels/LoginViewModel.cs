@@ -14,6 +14,4 @@ public class LoginViewModel
     [MinLength(8, ErrorMessage = "La contraseña debe tener al menos 8 caracteres.")]
     [Display(Name = "Contraseña")]
     public string Password { get; set; } = string.Empty;
-
-    public string? MensajeDemo { get; set; }
 }

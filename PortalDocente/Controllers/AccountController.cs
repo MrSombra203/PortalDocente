@@ -13,12 +13,10 @@ namespace PortalDocente.Controllers;
 public class AccountController : Controller
 {
     private readonly IProgresoConsultaService _progresoService;
-    private readonly IConfiguration _configuration;
 
-    public AccountController(IProgresoConsultaService progresoService, IConfiguration configuration)
+    public AccountController(IProgresoConsultaService progresoService)
     {
         _progresoService = progresoService;
-        _configuration = configuration;
     }
 
     [HttpGet]
@@ -28,7 +26,7 @@ public class AccountController : Controller
         if (User.Identity?.IsAuthenticated == true && User.IsInRole(ClaimsPrincipalExtensions.RolDocente))
             return RedirectToAction("Index", "Home");
 
-        var model = CrearLoginViewModel();
+        var model = new LoginViewModel();
         if (limitado == 1)
             ModelState.AddModelError(string.Empty, "Demasiados intentos de ingreso. Espera unos minutos e inténtalo de nuevo.");
 
@@ -42,15 +40,19 @@ public class AccountController : Controller
     [EnableRateLimiting("login")]
     public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null, CancellationToken cancellationToken = default)
     {
-        model.MensajeDemo = CrearLoginViewModel().MensajeDemo;
         ViewData["ReturnUrl"] = returnUrl;
 
         if (!ModelState.IsValid)
             return View(model);
 
-        var (ok, docenteId, nombre, error) = await _progresoService.ValidarDocenteAsync(
+        var (ok, usuarioId, docenteId, correo, nombre, rol, error) = await _progresoService.ValidarDocenteAsync(
             model.Correo, model.Password, cancellationToken);
-        if (!ok || docenteId is null)
+        if (!ok
+            || usuarioId is null
+            || docenteId is null
+            || string.IsNullOrWhiteSpace(correo)
+            || string.IsNullOrWhiteSpace(nombre)
+            || string.IsNullOrWhiteSpace(rol))
         {
             ModelState.AddModelError(string.Empty, error ?? "No se pudo iniciar sesión.");
             return View(model);
@@ -58,10 +60,10 @@ public class AccountController : Controller
 
         var claims = new List<Claim>
         {
-            new(ClaimTypes.NameIdentifier, docenteId.Value.ToString()),
-            new(ClaimTypes.Name, nombre ?? model.Correo.Trim()),
-            new(ClaimTypes.Email, model.Correo.Trim()),
-            new(ClaimTypes.Role, ClaimsPrincipalExtensions.RolDocente),
+            new(ClaimTypes.NameIdentifier, usuarioId.Value.ToString()),
+            new(ClaimTypes.Name, nombre),
+            new(ClaimTypes.Email, correo),
+            new(ClaimTypes.Role, rol),
             new(ClaimsPrincipalExtensions.DocenteIdClaim, docenteId.Value.ToString())
         };
 
@@ -95,16 +97,5 @@ public class AccountController : Controller
     {
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         return RedirectToAction(nameof(Login));
-    }
-
-    private LoginViewModel CrearLoginViewModel()
-    {
-        var usaDemo = _configuration.GetValue("Demo:UseInMemoryData", true);
-        return new LoginViewModel
-        {
-            MensajeDemo = usaDemo
-                ? "Entorno de demostración. Usa la cuenta docente descrita en el README del proyecto; la contraseña no se muestra en pantalla."
-                : null
-        };
     }
 }

@@ -9,16 +9,8 @@
         <h1>Estudiantes</h1>
         <p class="page-subtitle">Consulta la actividad y el progreso individual de tus cohortes.</p>
     </div>
-    <span class="count-pill">@(Model.Estudiantes.Count == 1 ? "1 estudiante" : $"{Model.Estudiantes.Count} estudiantes")</span>
+    <span class="count-pill">@(Model.TotalEstudiantes == 1 ? "1 estudiante" : $"{Model.TotalEstudiantes} estudiantes")</span>
 </section>
-
-@if (Model.UsaDatosDemo)
-{
-    <div class="notice notice-demo" role="status">
-        <span class="notice-mark" aria-hidden="true">i</span>
-        <span>Los datos de esta demo son ficticios y solo ilustran el seguimiento del progreso.</span>
-    </div>
-}
 
 <section class="panel students-panel">
     <div class="list-toolbar">
@@ -96,6 +88,23 @@
                 </tbody>
             </table>
         </div>
-        <p class="table-caption">Mostrando @(Model.Estudiantes.Count == 1 ? "1 estudiante" : $"{Model.Estudiantes.Count} estudiantes")</p>
+        <p class="table-caption">
+            Mostrando @((Model.PaginaActual - 1) * Model.TamanioPagina + 1)–@Math.Min(Model.PaginaActual * Model.TamanioPagina, Model.TotalEstudiantes)
+            de @(Model.TotalEstudiantes == 1 ? "1 estudiante" : $"{Model.TotalEstudiantes} estudiantes")
+        </p>
+        @if (Model.TotalPaginas > 1)
+        {
+            <nav class="pagination" aria-label="Paginación de estudiantes">
+                @if (Model.PaginaActual > 1)
+                {
+                    <a class="pagination-link" asp-action="Index" asp-route-q="@Model.Busqueda" asp-route-pagina="@(Model.PaginaActual - 1)">Anterior</a>
+                }
+                <span aria-current="page">Página @Model.PaginaActual de @Model.TotalPaginas</span>
+                @if (Model.PaginaActual < Model.TotalPaginas)
+                {
+                    <a class="pagination-link" asp-action="Index" asp-route-q="@Model.Busqueda" asp-route-pagina="@(Model.PaginaActual + 1)">Siguiente</a>
+                }
+            </nav>
+        }
     }
 </section>
