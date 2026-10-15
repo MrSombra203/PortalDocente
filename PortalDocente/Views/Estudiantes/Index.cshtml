@@ -18,14 +18,26 @@
             <h2>Listado de estudiantes</h2>
             <p>Selecciona un perfil para revisar su historial de partidas y KPI.</p>
         </div>
-        <form asp-controller="Estudiantes" asp-action="Index" method="get" class="list-search" role="search">
+        <form asp-controller="Estudiantes" asp-action="Index" method="get" class="list-search student-search-form" role="search">
             <label class="visually-hidden" for="student-search">Buscar estudiante</label>
-            <input id="student-search" type="search" name="q" value="@Model.Busqueda"
-                   placeholder="Nombre, correo o código" />
-            @if (!string.IsNullOrWhiteSpace(Model.Busqueda))
-            {
-                <a class="clear-search" asp-controller="Estudiantes" asp-action="Index">Limpiar</a>
-            }
+            <div class="student-search-control">
+                <input id="student-search" type="search" name="q" value="@Model.Busqueda"
+                       placeholder="Nombre, correo o código" autocomplete="off" />
+                <span class="student-search-icon" aria-hidden="true">
+                    <svg class="search-icon-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" xmlns="http://www.w3.org/2000/svg">
+                        <path d="m21 21-6-6m2-5a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z" stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg>
+                    <svg class="search-icon-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" xmlns="http://www.w3.org/2000/svg">
+                        <path d="m10 19-7-7 7-7m-7 7h18" stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg>
+                </span>
+                <button class="student-search-clear" type="button" data-clear-student-search
+                        aria-label="Limpiar búsqueda" title="Limpiar búsqueda">
+                    <svg viewBox="0 0 20 20" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M4.293 4.293a1 1 0 0 1 1.414 0L10 8.586l4.293-4.293a1 1 0 1 1 1.414 1.414L11.414 10l4.293 4.293a1 1 0 0 1-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 0 1-1.414-1.414L8.586 10 4.293 5.707a1 1 0 0 1 0-1.414Z" fill="currentColor"></path>
+                    </svg>
+                </button>
+            </div>
             <button class="button button-primary button-small" type="submit">Buscar</button>
         </form>
     </div>

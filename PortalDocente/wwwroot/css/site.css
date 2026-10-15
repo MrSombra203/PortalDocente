@@ -229,8 +229,89 @@ h2 { margin-bottom: 3px; font-size: 16px; font-weight: 700; letter-spacing: -.01
 .students-panel { padding: 0; overflow: hidden; }
 .list-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 20px 21px; }
 .list-search { display: flex; max-width: 480px; align-items: center; gap: 8px; }
-.list-search input { width: 220px; min-width: 0; height: 36px; padding: 0 11px; border: 1px solid var(--line); border-radius: 8px; color: var(--ink); background: #fff; font-size: 11px; }
-.clear-search { color: var(--muted); font-size: 10px; white-space: nowrap; }
+.student-search-control {
+  --search-padding: 12px;
+  --search-accent: #15a986;
+  position: relative;
+  width: min(280px, 34vw);
+  min-width: 0;
+  height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  transition: border-color .2s ease, box-shadow .2s ease;
+}
+.student-search-control:focus-within { border-color: #c8bee8; box-shadow: 0 0 0 3px rgba(89,66,166,.08); }
+.student-search-control input {
+  width: 100%;
+  height: 100%;
+  padding: 0 38px 0 39px;
+  border: 0;
+  border-radius: inherit;
+  outline: 0;
+  color: var(--ink);
+  background: transparent;
+  font-size: 11px;
+}
+.student-search-control input::placeholder { color: #9895a5; }
+.student-search-control input:focus-visible { outline: 0; }
+.student-search-control input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
+.student-search-icon {
+  position: absolute;
+  top: 50%;
+  left: var(--search-padding);
+  display: flex;
+  width: 15px;
+  height: 15px;
+  align-items: center;
+  justify-content: center;
+  color: #777589;
+  pointer-events: none;
+  transform: translateY(-50%);
+  transition: transform .3s cubic-bezier(.4,0,.2,1), color .3s cubic-bezier(.4,0,.2,1);
+}
+.student-search-icon svg { position: absolute; width: 15px; height: 15px; transition: opacity .2s ease, transform .3s cubic-bezier(.4,0,.2,1); }
+.search-icon-on { opacity: 1; }
+.search-icon-off { opacity: 0; transform: rotate(-80deg); }
+.student-search-control input:focus ~ .student-search-icon,
+.student-search-control input:not(:placeholder-shown) ~ .student-search-icon {
+  color: var(--search-accent);
+  transform: translateY(-50%) rotate(80deg) scale(1.2);
+}
+.student-search-control input:focus ~ .student-search-icon .search-icon-on,
+.student-search-control input:not(:placeholder-shown) ~ .student-search-icon .search-icon-on { opacity: 0; }
+.student-search-control input:focus ~ .student-search-icon .search-icon-off,
+.student-search-control input:not(:placeholder-shown) ~ .student-search-icon .search-icon-off {
+  opacity: 1;
+  transform: rotate(0);
+}
+.student-search-clear {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  display: grid;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  padding: 3px;
+  border: 0;
+  border-radius: 50%;
+  color: #777589;
+  background: transparent;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-50%) scale(.7);
+  transition: color .15s ease, background .15s ease, opacity .15s ease, transform .15s ease;
+}
+.student-search-clear svg { width: 14px; height: 14px; }
+.student-search-control input:not(:placeholder-shown) ~ .student-search-clear {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(-50%) scale(1);
+}
+.student-search-clear:hover { color: var(--purple); background: #f0edf9; }
+.student-search-clear:focus-visible { outline-offset: 1px; }
 .table-scroll { width: 100%; overflow-x: auto; }
 .data-table { width: 100%; border-collapse: collapse; text-align: left; }
 .data-table thead { color: #777487; background: #faf9fc; }
@@ -433,7 +514,7 @@ h2 { margin-bottom: 3px; font-size: 16px; font-weight: 700; letter-spacing: -.01
   .student-card-grid { grid-template-columns: 1fr; }
   .list-toolbar { align-items: flex-start; flex-direction: column; padding: 16px; }
   .list-search { width: 100%; max-width: none; }
-  .list-search input { width: 100%; }
+  .student-search-control { width: auto; flex: 1; }
   .list-search .button { flex: 0 0 auto; }
   .profile-identity { align-items: flex-start; gap: 12px; }
   .profile-avatar { width: 50px; height: 50px; font-size: 16px; }

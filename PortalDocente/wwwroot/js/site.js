@@ -40,6 +40,22 @@
 })();
 
 (() => {
+    document.addEventListener("click", (event) => {
+        if (!(event.target instanceof Element)) return;
+
+        const clearButton = event.target.closest("[data-clear-student-search]");
+        if (!(clearButton instanceof HTMLButtonElement)) return;
+
+        const form = clearButton.closest("form");
+        const input = form?.querySelector('input[name="q"]');
+        if (!(form instanceof HTMLFormElement) || !(input instanceof HTMLInputElement)) return;
+
+        input.value = "";
+        form.requestSubmit();
+    });
+})();
+
+(() => {
     const loader = document.getElementById("pageLoader");
     if (!loader) return;
 
