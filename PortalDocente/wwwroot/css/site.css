@@ -197,7 +197,7 @@ h2 { margin-bottom: 3px; font-size: 16px; font-weight: 700; letter-spacing: -.01
 .chart-gridline { stroke: #eeedf3; stroke-width: 1; }
 .chart-line { fill: none; stroke: #725ad0; stroke-linecap: round; stroke-linejoin: round; stroke-width: 3; }
 .chart-dot { fill: #fff; stroke: #725ad0; stroke-width: 3; }
-.chart-labels { display: flex; justify-content: space-between; gap: 7px; padding: 5px 2px 0 33px; color: #9693a3; font-size: 9px; }
+.chart-labels { display: flex; justify-content: space-between; gap: 7px; padding: 5px 2px 0 33px; color: #9693a3; font-size: 10px; }
 .activity-list { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
 .activity-list li { display: flex; min-width: 0; align-items: center; gap: 11px; padding: 12px 0; border-top: 1px solid #f1f0f5; }
 .activity-list li:first-child { padding-top: 0; border-top: 0; }
@@ -205,8 +205,8 @@ h2 { margin-bottom: 3px; font-size: 16px; font-weight: 700; letter-spacing: -.01
 .activity-copy { min-width: 0; flex: 1; }
 .activity-copy strong, .activity-copy span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .activity-copy strong { font-size: 11px; }
-.activity-copy span { margin-top: 2px; color: var(--muted); font-size: 10px; }
-.activity-list time { color: #9996a5; font-size: 10px; white-space: nowrap; }
+.activity-copy span { margin-top: 2px; color: var(--muted); font-size: 11px; }
+.activity-list time { color: #9996a5; font-size: 11px; white-space: nowrap; }
 .student-card-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .student-card { display: flex; min-width: 0; align-items: center; gap: 11px; padding: 13px; border: 1px solid #efedf4; border-radius: 10px; transition: border-color .15s ease, background .15s ease; }
 .student-card:hover { border-color: #d9d2f0; background: #fcfbff; }
@@ -315,25 +315,25 @@ h2 { margin-bottom: 3px; font-size: 16px; font-weight: 700; letter-spacing: -.01
 .table-scroll { width: 100%; overflow-x: auto; }
 .data-table { width: 100%; border-collapse: collapse; text-align: left; }
 .data-table thead { color: #777487; background: #faf9fc; }
-.data-table th { padding: 11px 14px; font-size: 9px; font-weight: 700; letter-spacing: .035em; white-space: nowrap; }
-.data-table td { padding: 13px 14px; border-top: 1px solid #f0eff4; color: #514e60; font-size: 10px; white-space: nowrap; }
+.data-table th { padding: 11px 14px; font-size: 10px; font-weight: 700; letter-spacing: .035em; white-space: nowrap; }
+.data-table td { padding: 13px 14px; border-top: 1px solid #f0eff4; color: #514e60; font-size: 11px; white-space: nowrap; }
 .data-table th:first-child, .data-table td:first-child { padding-left: 21px; }
 .data-table th:last-child, .data-table td:last-child { padding-right: 21px; text-align: right; }
 .table-person { display: flex; align-items: center; gap: 10px; }
 .table-person .student-avatar { width: 34px; height: 34px; }
 .table-person strong, .table-person small { display: block; }
 .table-person strong, .data-table td strong { color: var(--ink); font-size: 10px; }
-.table-person small, .table-secondary { margin-top: 2px; color: #9794a4; font-size: 9px; }
+.table-person small, .table-secondary { margin-top: 2px; color: #9794a4; font-size: 10px; }
 .table-secondary { display: block; }
-.progress-status { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 18px; font-size: 9px; font-weight: 650; }
+.progress-status { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 18px; font-size: 10px; font-weight: 650; }
 .progress-status i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 .has-progress { color: #13805f; background: #e8f6f0; }
 .no-progress { color: #898697; background: #f1f0f4; }
 .row-link { white-space: nowrap; }
-.table-caption { margin: 0; padding: 12px 21px; border-top: 1px solid var(--line); color: #9693a3; font-size: 10px; }
-.pagination { display: flex; align-items: center; justify-content: center; gap: 16px; padding: 0 16px 16px; color: var(--muted); font-size: 11px; }
+.table-caption { margin: 0; padding: 12px 21px; border-top: 1px solid var(--line); color: #9693a3; font-size: 11px; }
+.pagination { display: flex; align-items: center; justify-content: center; gap: 16px; padding: 0 16px 16px; color: var(--muted); font-size: 12px; }
 .pagination-link { padding: 7px 10px; border: 1px solid var(--line); border-radius: 7px; color: var(--ink); text-decoration: none; }
-.pagination-link:hover { border-color: var(--accent); color: var(--accent); }
+.pagination-link:hover { border-color: var(--purple); color: var(--purple); }
 .students-panel > .empty-state { border-top: 1px solid var(--line); }
 
 .breadcrumbs { display: flex; flex-wrap: wrap; gap: 9px; margin: 0 0 18px; color: #9996a5; font-size: 10px; }
@@ -372,6 +372,7 @@ h2 { margin-bottom: 3px; font-size: 16px; font-weight: 700; letter-spacing: -.01
 .login-message p:last-child { max-width: 440px; margin: 0; color: #d2cde1; font-size: 14px; }
 .login-illustration-footer { position: relative; z-index: 1; color: #b9b2cc; font-size: 10px; }
 .login-form-side { display: grid; place-items: center; padding: 34px; }
+.access-denied-side { margin: auto; }
 .login-form-card { width: min(420px, 100%); }
 .login-form-card h2 { margin: 0 0 5px; font-size: 28px; letter-spacing: -.03em; }
 .login-form-card > .page-subtitle { margin-bottom: 25px; }
@@ -494,7 +495,7 @@ h2 { margin-bottom: 3px; font-size: 16px; font-weight: 700; letter-spacing: -.01
   .login-page { grid-template-columns: minmax(280px, .8fr) minmax(380px, 1.2fr); }
 }
 
-@media (max-width: 620px) {
+@media (max-width: 680px) {
   .topbar { gap: 7px; padding: 0 12px; }
   .top-search { width: auto; min-width: 0; flex: 1; padding-right: 7px; }
   .top-search button { padding: 5px; font-size: 10px; }
@@ -533,6 +534,9 @@ h2 { margin-bottom: 3px; font-size: 16px; font-weight: 700; letter-spacing: -.01
   .metric-icon { margin-bottom: 8px; }
   .page-heading { flex-direction: column; }
 }
+
+.privacy-panel { max-width: 760px; }
+.privacy-panel p:last-child { margin-bottom: 0; color: var(--muted); }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }

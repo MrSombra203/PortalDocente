@@ -107,7 +107,7 @@ else
         </section>
 
         <section class="panel latest-result-panel">
-            <div class="panel-heading"><div><h2>Último resultado</h2><p>@(Model.UltimaActividad?.ToLocalTime().ToString("dd/MM/yyyy") ?? "")</p></div></div>
+            <div class="panel-heading"><div><h2>Último resultado</h2><p>@(Model.UltimoResultadoEn?.ToLocalTime().ToString("dd/MM/yyyy") ?? "Sin KPI asociado")</p></div></div>
             <div class="latest-score">
                 <strong>@(Model.UltimaPuntuacionGlobal?.ToString("0.0") ?? "—")</strong>
                 <span>puntos</span>

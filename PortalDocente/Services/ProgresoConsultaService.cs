@@ -253,14 +253,15 @@ public class ProgresoConsultaService : IProgresoConsultaService
         vm.EscenarioAlcanzado = ultimaConNivel.Nivel.Escenario.Nombre;
         vm.Dificultad = ultimaConNivel.Nivel.Escenario.Dificultad;
 
-        var ultimaConKpi = partidas.FirstOrDefault(p => p.Kpi != null)?.Kpi;
-        if (ultimaConKpi != null)
+        var ultimaPartidaConKpi = partidas.FirstOrDefault(p => p.Kpi != null);
+        if (ultimaPartidaConKpi?.Kpi is { } ultimoKpi)
         {
-            vm.UltimoCostoTotal = ultimaConKpi.CostoTotal;
-            vm.UltimoPctEntregasATiempo = ultimaConKpi.PctEntregasATiempo;
-            vm.UltimaUtilizacionRecursos = ultimaConKpi.UtilizacionRecursos;
-            vm.UltimaEficienciaRutas = ultimaConKpi.EficienciaRutas;
-            vm.UltimaPuntuacionGlobal = ultimaConKpi.PuntuacionGlobal;
+            vm.UltimoResultadoEn = ultimaPartidaConKpi.FechaCreacion;
+            vm.UltimoCostoTotal = ultimoKpi.CostoTotal;
+            vm.UltimoPctEntregasATiempo = ultimoKpi.PctEntregasATiempo;
+            vm.UltimaUtilizacionRecursos = ultimoKpi.UtilizacionRecursos;
+            vm.UltimaEficienciaRutas = ultimoKpi.EficienciaRutas;
+            vm.UltimaPuntuacionGlobal = ultimoKpi.PuntuacionGlobal;
         }
 
         var puntuaciones = partidas.Where(p => p.Kpi != null).Select(p => p.Kpi!.PuntuacionGlobal).ToList();

@@ -41,6 +41,66 @@ public class ProgresoConsultaServiceTests
     }
 
     [Fact]
+    public async Task ObtenerProgresoAsync_MuestraLaFechaDelUltimoKpi()
+    {
+        await using var db = CrearBaseDeDatos();
+        await ProgresoConsultaTestData.SeedAsync(db, 1);
+
+        var cohorte = await db.Cohortes.SingleAsync();
+        var estudiante = await db.Estudiantes.SingleAsync();
+        var resultadoEn = DateTimeOffset.UtcNow.AddDays(-2);
+        var actividadEn = DateTimeOffset.UtcNow.AddDays(-1);
+        var escenario = new Escenario
+        {
+            Id = Guid.NewGuid(),
+            CohorteId = cohorte.Id,
+            Nombre = "Escenario de prueba",
+            CreadoEn = resultadoEn,
+            ActualizadoEn = resultadoEn
+        };
+        var nivel = new Nivel
+        {
+            Id = Guid.NewGuid(),
+            EscenarioId = escenario.Id,
+            Numero = 1
+        };
+        var partidaConKpi = new Partida
+        {
+            Id = Guid.NewGuid(),
+            EstudianteId = estudiante.Id,
+            NivelId = nivel.Id,
+            FechaCreacion = resultadoEn,
+            FechaRecepcion = resultadoEn
+        };
+        var partidaReciente = new Partida
+        {
+            Id = Guid.NewGuid(),
+            EstudianteId = estudiante.Id,
+            NivelId = nivel.Id,
+            FechaCreacion = actividadEn,
+            FechaRecepcion = actividadEn
+        };
+
+        db.Escenarios.Add(escenario);
+        db.Niveles.Add(nivel);
+        db.Partidas.AddRange(partidaConKpi, partidaReciente);
+        db.Kpis.Add(new Kpi
+        {
+            Id = Guid.NewGuid(),
+            PartidaId = partidaConKpi.Id,
+            FechaCreacion = resultadoEn
+        });
+        await db.SaveChangesAsync();
+
+        var resultado = await new ProgresoConsultaService(db)
+            .ObtenerProgresoAsync(ProgresoConsultaTestData.DocenteId, estudiante.Id);
+
+        Assert.NotNull(resultado);
+        Assert.Equal(actividadEn, resultado.UltimaActividad);
+        Assert.Equal(resultadoEn, resultado.UltimoResultadoEn);
+    }
+
+    [Fact]
     public async Task ValidarDocenteAsync_AceptaUsuarioConCredencialesYRolEnLaBase()
     {
         await using var db = CrearBaseDeDatos();

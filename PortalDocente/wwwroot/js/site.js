@@ -11,12 +11,14 @@
     const closeMenu = () => {
         document.body.classList.remove("sidebar-open");
         toggle.setAttribute("aria-expanded", "false");
+        toggle.setAttribute("aria-label", "Abrir menú");
         document.querySelector(".sidebar-overlay")?.remove();
     };
 
     toggle.addEventListener("click", () => {
         const open = document.body.classList.toggle("sidebar-open");
         toggle.setAttribute("aria-expanded", String(open));
+        toggle.setAttribute("aria-label", open ? "Cerrar menú" : "Abrir menú");
 
         if (open) {
             const overlay = document.createElement("button");

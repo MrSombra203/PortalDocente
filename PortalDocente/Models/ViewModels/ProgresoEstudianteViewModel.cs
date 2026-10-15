@@ -11,6 +11,7 @@ public class ProgresoEstudianteViewModel
     public int TotalPartidas { get; set; }
     public int PartidasFinalizadas { get; set; }
     public DateTimeOffset? UltimaActividad { get; set; }
+    public DateTimeOffset? UltimoResultadoEn { get; set; }
     public string? NivelAlcanzado { get; set; }
     public string? EscenarioAlcanzado { get; set; }
     public string? Dificultad { get; set; }

@@ -26,10 +26,12 @@
         <div class="sidebar-section">
             <span class="sidebar-label">SEGUIMIENTO</span>
             <a class="sidebar-link @(controller == "Home" ? "active" : null)"
+               aria-current="@(controller == "Home" && action == "Index" ? "page" : null)"
                asp-controller="Home" asp-action="Index">
                 <span class="sidebar-ico" aria-hidden="true">▦</span> Resumen
             </a>
             <a class="sidebar-link @(controller == "Estudiantes" ? "active" : null)"
+               aria-current="@(controller == "Estudiantes" && action == "Index" ? "page" : null)"
                asp-controller="Estudiantes" asp-action="Index">
                 <span class="sidebar-ico" aria-hidden="true">♙</span> Estudiantes
             </a>
@@ -43,7 +45,8 @@
 
     <div class="main-wrap">
         <header class="topbar">
-            <button type="button" class="menu-btn" id="sidebarToggle" aria-label="Abrir menú" aria-expanded="false">☰</button>
+            <button type="button" class="menu-btn" id="sidebarToggle" aria-label="Abrir menú"
+                    aria-controls="sidebar" aria-expanded="false">☰</button>
             <form class="top-search" asp-controller="Estudiantes" asp-action="Index" method="get" role="search">
                 <label class="visually-hidden" for="top-search-input">Buscar estudiante</label>
                 <span aria-hidden="true">⌕</span>
