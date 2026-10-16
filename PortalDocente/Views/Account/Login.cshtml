@@ -20,7 +20,7 @@
         <div class="login-form-card">
             <p class="eyebrow">BIENVENIDO/A</p>
             <h2>Iniciar sesión</h2>
-            <p class="page-subtitle">Ingresa con tu cuenta docente para continuar.</p>
+            <p class="page-subtitle">Ingresa con tu cuenta para continuar.</p>
 
             <form asp-controller="Account" asp-action="Login" method="post" class="login-form">
                 @Html.AntiForgeryToken()
@@ -46,7 +46,7 @@
                 </div>
                 <button class="button button-primary login-submit" type="submit">Entrar al portal <span aria-hidden="true">→</span></button>
             </form>
-            <p class="login-footnote">Acceso exclusivo para docentes.</p>
+            <p class="login-footnote">El acceso y las opciones disponibles dependen del rol asignado a tu cuenta.</p>
         </div>
     </section>
 </div>

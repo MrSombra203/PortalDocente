@@ -1,0 +1,60 @@
+@model UsuarioAdministracionEditViewModel
+@{
+    var esCreacion = ViewData["EsCreacion"] is true;
+}
+
+<section class="panel admin-form-panel">
+    <form asp-action="@(esCreacion ? "Crear" : "Editar")" asp-route-id="@(esCreacion ? null : Model.Id)" method="post">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="validation-summary" role="alert"></div>
+        <input asp-for="Id" type="hidden" />
+
+        <div class="admin-form-grid">
+            <div class="form-field">
+                <label asp-for="NombreCompleto"></label>
+                <input asp-for="NombreCompleto" class="admin-form-input" autocomplete="name" />
+                <span asp-validation-for="NombreCompleto" class="field-error"></span>
+            </div>
+            <div class="form-field">
+                <label asp-for="Correo"></label>
+                <input asp-for="Correo" class="admin-form-input" autocomplete="email" />
+                <span asp-validation-for="Correo" class="field-error"></span>
+            </div>
+            <div class="form-field">
+                <label asp-for="Rol"></label>
+                <select asp-for="Rol" asp-items="ViewBag.Roles" class="admin-form-input">
+                    <option value="">Selecciona un rol</option>
+                </select>
+                <span asp-validation-for="Rol" class="field-error"></span>
+            </div>
+            <div class="form-field">
+                <label asp-for="Password">@(esCreacion ? "Contraseña inicial" : "Nueva contraseña (opcional)")</label>
+                <input asp-for="Password" class="admin-form-input" autocomplete="new-password"
+                       required="@esCreacion" />
+                <span class="field-hint">Mínimo 12 caracteres. Nunca se muestra la contraseña actual.</span>
+                <span asp-validation-for="Password" class="field-error"></span>
+            </div>
+            <div class="form-field">
+                <label asp-for="CodigoInstitucional"></label>
+                <input asp-for="CodigoInstitucional" class="admin-form-input" />
+                <span class="field-hint">Opcional; se utiliza en cuentas de estudiante.</span>
+                <span asp-validation-for="CodigoInstitucional" class="field-error"></span>
+            </div>
+            <div class="form-field">
+                <label asp-for="TituloAcademico"></label>
+                <input asp-for="TituloAcademico" class="admin-form-input" />
+                <span class="field-hint">Opcional; se utiliza en cuentas de docente.</span>
+                <span asp-validation-for="TituloAcademico" class="field-error"></span>
+            </div>
+            <label class="admin-active-option">
+                <input asp-for="Activo" />
+                <span>Cuenta activa</span>
+            </label>
+        </div>
+
+        <div class="admin-form-actions">
+            <a class="button button-secondary" asp-action="Index">Cancelar</a>
+            <button class="button button-primary" type="submit">@(esCreacion ? "Crear cuenta" : "Guardar cambios")</button>
+        </div>
+    </form>
+</section>

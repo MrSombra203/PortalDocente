@@ -537,6 +537,30 @@ h2 { margin-bottom: 3px; font-size: 16px; font-weight: 700; letter-spacing: -.01
 
 .privacy-panel { max-width: 760px; }
 .privacy-panel p:last-child { margin-bottom: 0; color: var(--muted); }
+.admin-notice { margin-bottom: 16px; padding: 12px 15px; border: 1px solid transparent; border-radius: 9px; font-size: 12px; }
+.admin-notice-success { border-color: #c9e9dc; color: #176c54; background: #eef9f4; }
+.admin-notice-error { border-color: #f0cbd0; color: #9b2938; background: #fff3f4; }
+.admin-form-panel { max-width: 860px; }
+.admin-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 20px; }
+.admin-form-grid .form-field label { color: var(--ink); font-size: 12px; font-weight: 650; }
+.admin-form-input { width: 100%; min-height: 42px; padding: 9px 11px; border: 1px solid #dedce7; border-radius: 8px; color: var(--ink); background: #fff; }
+.admin-form-input:focus { border-color: #b7a9e0; outline: 3px solid rgba(89,66,166,.1); }
+.field-hint { color: var(--muted); font-size: 10px; }
+.admin-active-option { display: inline-flex; align-items: center; gap: 9px; color: var(--ink); font-size: 12px; }
+.admin-active-option input { width: 16px; height: 16px; accent-color: var(--purple); }
+.admin-form-actions, .admin-user-actions { display: flex; align-items: center; justify-content: flex-end; gap: 12px; }
+.admin-form-actions { margin-top: 25px; padding-top: 18px; border-top: 1px solid var(--line); }
+.button-secondary { border-color: var(--line); color: var(--ink); background: #fff; }
+.button-secondary:hover { border-color: #d1cbe8; color: var(--purple); }
+.admin-user-actions form { margin: 0; }
+.admin-delete-button { padding: 0; border: 0; color: #a43140; background: transparent; font-size: 12px; font-weight: 700; cursor: pointer; }
+.admin-delete-button:hover { color: #7d1c2a; text-decoration: underline; }
+
+@media (max-width: 680px) {
+  .admin-form-grid { grid-template-columns: 1fr; gap: 14px; }
+  .admin-form-actions { justify-content: stretch; }
+  .admin-form-actions .button { flex: 1; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }

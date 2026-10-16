@@ -1,7 +1,12 @@
 @{
     var controller = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
     var action = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
-    var autenticado = User.Identity?.IsAuthenticated == true && User.IsInRole("docente");
+    var esAdministrador = User.Identity?.IsAuthenticated == true
+                          && User.IsInRole(ClaimsPrincipalExtensions.RolAdmin);
+    var esDocente = User.Identity?.IsAuthenticated == true
+                    && User.IsInRole(ClaimsPrincipalExtensions.RolDocente);
+    var mostrarNavegacion = esAdministrador || esDocente;
+    var busquedaActual = Context.Request.Query["q"].ToString();
     var esLogin = string.Equals(controller, "Account", StringComparison.OrdinalIgnoreCase)
                   && string.Equals(action, "Login", StringComparison.OrdinalIgnoreCase);
 }
@@ -14,8 +19,8 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
-<body class="@(autenticado && !esLogin ? "app-shell" : "auth-shell")">
-@if (autenticado && !esLogin)
+<body class="@(mostrarNavegacion && !esLogin ? "app-shell" : "auth-shell")">
+@if (mostrarNavegacion && !esLogin)
 {
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-brand">
@@ -23,23 +28,38 @@
             <span><strong>UDLA</strong><small>PORTAL DOCENTE</small></span>
         </div>
 
-        <div class="sidebar-section">
-            <span class="sidebar-label">SEGUIMIENTO</span>
-            <a class="sidebar-link @(controller == "Home" ? "active" : null)"
-               aria-current="@(controller == "Home" && action == "Index" ? "page" : null)"
-               asp-controller="Home" asp-action="Index">
-                <span class="sidebar-ico" aria-hidden="true">▦</span> Resumen
-            </a>
-            <a class="sidebar-link @(controller == "Estudiantes" ? "active" : null)"
-               aria-current="@(controller == "Estudiantes" && action == "Index" ? "page" : null)"
-               asp-controller="Estudiantes" asp-action="Index">
-                <span class="sidebar-ico" aria-hidden="true">♙</span> Estudiantes
-            </a>
-        </div>
+        @if (esDocente)
+        {
+            <div class="sidebar-section">
+                <span class="sidebar-label">SEGUIMIENTO</span>
+                <a class="sidebar-link @(controller == "Home" ? "active" : null)"
+                   aria-current="@(controller == "Home" && action == "Index" ? "page" : null)"
+                   asp-controller="Home" asp-action="Index">
+                    <span class="sidebar-ico" aria-hidden="true">▦</span> Resumen
+                </a>
+                <a class="sidebar-link @(controller == "Estudiantes" ? "active" : null)"
+                   aria-current="@(controller == "Estudiantes" && action == "Index" ? "page" : null)"
+                   asp-controller="Estudiantes" asp-action="Index">
+                    <span class="sidebar-ico" aria-hidden="true">♙</span> Estudiantes
+                </a>
+            </div>
+        }
+        else
+        {
+            <div class="sidebar-section">
+                <span class="sidebar-label">ADMINISTRACIÓN</span>
+                <a class="sidebar-link @(controller == "AdminUsuarios" ? "active" : null)"
+                   aria-current="@(controller == "AdminUsuarios" && action == "Index" ? "page" : null)"
+                   asp-controller="AdminUsuarios" asp-action="Index">
+                    <span class="sidebar-ico" aria-hidden="true">♙</span> Usuarios
+                </a>
+            </div>
+        }
 
         <div class="sidebar-foot">
             <span class="status-dot"></span>
-            <span>Vista de seguimiento<br /><small>Solo lectura</small></span>
+            <span>@(esDocente ? "Vista de seguimiento" : "Gestión de cuentas")<br />
+                <small>@(esDocente ? "Solo lectura" : "Administración")</small></span>
         </div>
     </aside>
 
@@ -47,18 +67,22 @@
         <header class="topbar">
             <button type="button" class="menu-btn" id="sidebarToggle" aria-label="Abrir menú"
                     aria-controls="sidebar" aria-expanded="false">☰</button>
-            <form class="top-search" asp-controller="Estudiantes" asp-action="Index" method="get" role="search">
-                <label class="visually-hidden" for="top-search-input">Buscar estudiante</label>
-                <span aria-hidden="true">⌕</span>
-                <input id="top-search-input" type="search" name="q" placeholder="Buscar estudiante…" />
-                <button type="submit">Buscar</button>
-            </form>
+            @if (esDocente)
+            {
+                <form class="top-search" asp-controller="Estudiantes" asp-action="Index" method="get" role="search">
+                    <label class="visually-hidden" for="top-search-input">Buscar estudiante</label>
+                    <span aria-hidden="true">⌕</span>
+                    <input id="top-search-input" type="search" name="q" value="@busquedaActual"
+                           placeholder="Buscar estudiante…" />
+                    <button type="submit">Buscar</button>
+                </form>
+            }
             <div class="topbar-right">
                 <div class="user-chip">
                     <span class="avatar">@((User.Identity?.Name is { Length: > 0 } n) ? char.ToUpperInvariant(n[0]).ToString() : "D")</span>
                     <span>
                         <strong>@User.Identity?.Name</strong>
-                        <small>Docente</small>
+                        <small>@(esAdministrador ? "Administrador" : "Docente")</small>
                     </span>
                 </div>
                 <form asp-controller="Account" asp-action="Logout" method="post">

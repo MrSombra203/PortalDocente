@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using PortalDocente.Data;
 using PortalDocente.Models.ViewModels;
-using PortalDocente.Security;
 
 namespace PortalDocente.Services;
 
@@ -158,13 +157,15 @@ public class ProgresoConsultaService : IProgresoConsultaService
             .Include(p => p.Kpi)
             .Where(p => estudianteIds.Contains(p.EstudianteId))
             .ToListAsync(cancellationToken);
+        var partidasPorEstudiante = partidas
+            .GroupBy(partida => partida.EstudianteId)
+            .ToDictionary(
+                grupo => grupo.Key,
+                grupo => grupo.OrderByDescending(partida => partida.FechaCreacion).ToList());
 
         var items = estudiantes.Select(e =>
         {
-            var partidasEst = partidas
-                .Where(p => p.EstudianteId == e.Id)
-                .OrderByDescending(p => p.FechaCreacion)
-                .ToList();
+            var partidasEst = partidasPorEstudiante.GetValueOrDefault(e.Id) ?? [];
 
             var ultima = partidasEst.FirstOrDefault();
             var matricula = e.Matriculas
@@ -299,43 +300,6 @@ public class ProgresoConsultaService : IProgresoConsultaService
             .ToList();
 
         return vm;
-    }
-
-    public async Task<(bool ok, Guid? usuarioId, Guid? docenteId, string? correo, string? nombreDocente, string? rol, string? error)>
-        ValidarDocenteAsync(string correo, string password, CancellationToken cancellationToken = default)
-    {
-        var correoNormalizado = correo.Trim().ToLowerInvariant();
-        var usuario = await _db.Usuarios
-            .AsNoTracking()
-            .Include(u => u.Docente)
-            .Include(u => u.Roles)
-                .ThenInclude(ur => ur.Rol)
-            .FirstOrDefaultAsync(
-                u => u.Correo.ToLower() == correoNormalizado
-                     && u.Activo
-                     && u.Roles.Any(ur => ur.Rol.Nombre == ClaimsPrincipalExtensions.RolDocente),
-                cancellationToken);
-
-        if (usuario?.Docente == null)
-            return (false, null, null, null, null, null, "Credenciales incorrectas o la cuenta no es de docente.");
-
-        bool claveValida;
-        try
-        {
-            claveValida = BCrypt.Net.BCrypt.Verify(password, usuario.PasswordHash);
-        }
-        catch (BCrypt.Net.SaltParseException)
-        {
-            claveValida = false;
-        }
-
-        if (!claveValida)
-            return (false, null, null, null, null, null, "Credenciales incorrectas o la cuenta no es de docente.");
-
-        var rol = usuario.Roles
-            .Select(usuarioRol => usuarioRol.Rol.Nombre)
-            .Single(nombreRol => nombreRol == ClaimsPrincipalExtensions.RolDocente);
-        return (true, usuario.Id, usuario.Docente.Id, usuario.Correo, usuario.NombreCompleto, rol, null);
     }
 
     private static string ObtenerIniciales(string nombre)

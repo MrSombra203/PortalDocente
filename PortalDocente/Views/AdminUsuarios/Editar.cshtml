@@ -1,0 +1,15 @@
+@model UsuarioAdministracionEditViewModel
+@{
+    ViewData["Title"] = "Editar usuario";
+    ViewData["EsCreacion"] = false;
+}
+
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">ADMINISTRACIÓN</p>
+        <h1>Editar usuario</h1>
+        <p class="page-subtitle">Deja la contraseña vacía para conservar la actual.</p>
+    </div>
+</section>
+
+<partial name="_FormularioUsuario" model="Model" />

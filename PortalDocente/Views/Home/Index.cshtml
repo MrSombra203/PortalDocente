@@ -57,7 +57,11 @@
                     .ToString("0.##", System.Globalization.CultureInfo.InvariantCulture),
                     (160m - (value / max * 130m)).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture))));
             <div class="chart-wrap">
-                <div class="chart-scale"><span>100</span><span>50</span><span>0</span></div>
+                <div class="chart-scale">
+                    <span>@max.ToString("0.#")</span>
+                    <span>@((max / 2m).ToString("0.#"))</span>
+                    <span>0</span>
+                </div>
                 <svg class="line-chart" viewBox="0 0 600 180" role="img" aria-label="Evolución de puntuación global">
                     <line x1="30" y1="30" x2="570" y2="30" class="chart-gridline" />
                     <line x1="30" y1="95" x2="570" y2="95" class="chart-gridline" />

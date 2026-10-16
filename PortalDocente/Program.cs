@@ -12,6 +12,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<IProgresoConsultaService, ProgresoConsultaService>();
+builder.Services.AddScoped<IUsuarioAdministracionService, UsuarioAdministracionService>();
+builder.Services.AddScoped<IUsuarioAutenticacionService, UsuarioAutenticacionService>();
+builder.Services.AddScoped<ValidarUsuarioCookieEvents>();
 
 builder.Services.AddAntiforgery(options =>
 {
@@ -52,13 +55,13 @@ builder.Services
         options.Cookie.IsEssential = true;
         options.Cookie.SameSite = SameSiteMode.Lax;
         options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+        options.EventsType = typeof(ValidarUsuarioCookieEvents);
     });
 
 builder.Services.AddAuthorization(options =>
 {
     options.FallbackPolicy = new AuthorizationPolicyBuilder()
         .RequireAuthenticatedUser()
-        .RequireRole(ClaimsPrincipalExtensions.RolDocente)
         .Build();
 });
 

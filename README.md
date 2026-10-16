@@ -14,13 +14,16 @@ dotnet user-secrets set "ConnectionStrings:PortalCentral" "Host=localhost;Port=5
 dotnet run --project .\PortalDocente\PortalDocente.csproj
 ```
 
+En el primer comando, sustituye `******` por la contraseña de PostgreSQL de este entorno antes de ejecutarlo.
 Si ya configuraste User Secrets en este equipo, basta iniciar el proyecto con F5 o ejecutar el segundo comando. No guardes credenciales en `appsettings*.json` ni las compartas en el repositorio.
 
 En otros ambientes, configura `ConnectionStrings__PortalCentral` como variable de entorno. Si PostgreSQL no está disponible durante el inicio, el portal registra el error y permanece iniciado; una solicitud que requiera la base devuelve una página de error genérica. Sin cadena de conexión, el inicio falla con un error de configuración explícito.
 
 ## Datos y acceso
 
-El login consulta `usuarios`, comprueba que la cuenta esté activa, que tenga perfil en `docentes` y que `usuarios_roles` la vincule con el rol `docente` existente en `roles`. La contraseña se verifica con BCrypt; el portal no crea ni restablece credenciales.
+El login consulta `usuarios`, comprueba que la cuenta esté activa y que tenga exactamente un rol permitido en `usuarios_roles`: `admin`, `docente` o `estudiante`. Los docentes necesitan perfil en `docentes`; los estudiantes necesitan perfil en `estudiantes`, pero sus credenciales se rechazan explícitamente en este portal. Las contraseñas se guardan con BCrypt.
+
+Los administradores ingresan únicamente a la gestión de usuarios en `/Admin/Usuarios`. Desde allí pueden crear, consultar, actualizar y eliminar cuentas, asignando un rol único. No pueden consultar la información académica del docente. Las cuentas con matrículas, partidas o cohortes relacionadas no se eliminan; el último administrador activo tampoco puede quedar deshabilitado o perder su rol. La aplicación verifica la cuenta y su rol actual al validar cada solicitud autenticada.
 
 El dashboard, la búsqueda, la paginación y los perfiles consultan los registros de PostgreSQL. Los listados se filtran por cohortes activas asignadas al docente autenticado. Los estados vacíos reflejan que la consulta no encontró registros; no se sustituyen por datos ficticios.
 

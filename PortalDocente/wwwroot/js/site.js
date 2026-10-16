@@ -58,6 +58,17 @@
 })();
 
 (() => {
+    document.addEventListener("submit", (event) => {
+        const form = event.target;
+        if (form instanceof HTMLFormElement
+            && form.hasAttribute("data-confirm-delete")
+            && !window.confirm("¿Eliminar esta cuenta?")) {
+            event.preventDefault();
+        }
+    });
+})();
+
+(() => {
     const loader = document.getElementById("pageLoader");
     if (!loader) return;
 
@@ -73,7 +84,8 @@
 
     document.addEventListener("submit", (event) => {
         const form = event.target;
-        if (!(form instanceof HTMLFormElement)
+        if (event.defaultPrevented
+            || !(form instanceof HTMLFormElement)
             || form.method.toLowerCase() === "dialog"
             || form.target && form.target.toLowerCase() !== "_self"
             || event.submitter instanceof HTMLButtonElement

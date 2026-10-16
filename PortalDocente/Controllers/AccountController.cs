@@ -12,19 +12,19 @@ namespace PortalDocente.Controllers;
 
 public class AccountController : Controller
 {
-    private readonly IProgresoConsultaService _progresoService;
+    private readonly IUsuarioAutenticacionService _autenticacionService;
 
-    public AccountController(IProgresoConsultaService progresoService)
+    public AccountController(IUsuarioAutenticacionService autenticacionService)
     {
-        _progresoService = progresoService;
+        _autenticacionService = autenticacionService;
     }
 
     [HttpGet]
     [AllowAnonymous]
     public IActionResult Login(string? returnUrl = null, int? limitado = null)
     {
-        if (User.Identity?.IsAuthenticated == true && User.IsInRole(ClaimsPrincipalExtensions.RolDocente))
-            return RedirectToAction("Index", "Home");
+        if (User.Identity?.IsAuthenticated == true)
+            return RedirigirSegunRol();
 
         var model = new LoginViewModel();
         if (limitado == 1)
@@ -45,14 +45,9 @@ public class AccountController : Controller
         if (!ModelState.IsValid)
             return View(model);
 
-        var (ok, usuarioId, docenteId, correo, nombre, rol, error) = await _progresoService.ValidarDocenteAsync(
+        var (usuario, error) = await _autenticacionService.AutenticarAsync(
             model.Correo, model.Password, cancellationToken);
-        if (!ok
-            || usuarioId is null
-            || docenteId is null
-            || string.IsNullOrWhiteSpace(correo)
-            || string.IsNullOrWhiteSpace(nombre)
-            || string.IsNullOrWhiteSpace(rol))
+        if (usuario == null)
         {
             ModelState.AddModelError(string.Empty, error ?? "No se pudo iniciar sesión.");
             return View(model);
@@ -60,12 +55,13 @@ public class AccountController : Controller
 
         var claims = new List<Claim>
         {
-            new(ClaimTypes.NameIdentifier, usuarioId.Value.ToString()),
-            new(ClaimTypes.Name, nombre),
-            new(ClaimTypes.Email, correo),
-            new(ClaimTypes.Role, rol),
-            new(ClaimsPrincipalExtensions.DocenteIdClaim, docenteId.Value.ToString())
+            new(ClaimTypes.NameIdentifier, usuario.Id.ToString()),
+            new(ClaimTypes.Name, usuario.NombreCompleto),
+            new(ClaimTypes.Email, usuario.Correo),
+            new(ClaimTypes.Role, usuario.Rol)
         };
+        if (usuario.DocenteId.HasValue)
+            claims.Add(new Claim(ClaimsPrincipalExtensions.DocenteIdClaim, usuario.DocenteId.Value.ToString()));
 
         var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
         await HttpContext.SignInAsync(
@@ -77,6 +73,9 @@ public class AccountController : Controller
                 ExpiresUtc = DateTimeOffset.UtcNow.AddHours(4)
             });
 
+        if (usuario.Rol == ClaimsPrincipalExtensions.RolAdmin)
+            return RedirectToAction("Index", "AdminUsuarios");
+
         if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
             return Redirect(returnUrl);
 
@@ -87,6 +86,9 @@ public class AccountController : Controller
     [AllowAnonymous]
     public IActionResult AccessDenied()
     {
+        if (User.Identity?.IsAuthenticated == true)
+            Response.StatusCode = StatusCodes.Status403Forbidden;
+
         return View();
     }
 
@@ -97,5 +99,16 @@ public class AccountController : Controller
     {
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         return RedirectToAction(nameof(Login));
+    }
+
+    private IActionResult RedirigirSegunRol()
+    {
+        if (User.IsInRole(ClaimsPrincipalExtensions.RolAdmin))
+            return RedirectToAction("Index", "AdminUsuarios");
+
+        if (User.IsInRole(ClaimsPrincipalExtensions.RolDocente))
+            return RedirectToAction("Index", "Home");
+
+        return RedirectToAction(nameof(AccessDenied));
     }
 }

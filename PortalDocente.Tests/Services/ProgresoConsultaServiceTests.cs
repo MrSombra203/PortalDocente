@@ -100,62 +100,6 @@ public class ProgresoConsultaServiceTests
         Assert.Equal(resultadoEn, resultado.UltimoResultadoEn);
     }
 
-    [Fact]
-    public async Task ValidarDocenteAsync_AceptaUsuarioConCredencialesYRolEnLaBase()
-    {
-        await using var db = CrearBaseDeDatos();
-        await ProgresoConsultaTestData.SeedAsync(db, 0);
-
-        var resultado = await new ProgresoConsultaService(db).ValidarDocenteAsync(
-            ProgresoConsultaTestData.DocenteCorreo,
-            ProgresoConsultaTestData.DocentePassword);
-
-        Assert.True(resultado.ok);
-        Assert.Equal(Guid.Parse("11111111-1111-1111-1111-111111111111"), resultado.usuarioId);
-        Assert.Equal(ProgresoConsultaTestData.DocenteId, resultado.docenteId);
-        Assert.Equal(ProgresoConsultaTestData.DocenteCorreo, resultado.correo);
-        Assert.Equal("docente", resultado.rol);
-        Assert.Null(resultado.error);
-    }
-
-    [Fact]
-    public async Task ValidarDocenteAsync_RechazaDocenteSinRolAsignado()
-    {
-        await using var db = CrearBaseDeDatos();
-        await ProgresoConsultaTestData.SeedAsync(db, 0);
-        db.UsuariosRoles.Remove(await db.UsuariosRoles.SingleAsync());
-        await db.SaveChangesAsync();
-
-        var resultado = await new ProgresoConsultaService(db).ValidarDocenteAsync(
-            ProgresoConsultaTestData.DocenteCorreo,
-            ProgresoConsultaTestData.DocentePassword);
-
-        Assert.False(resultado.ok);
-        Assert.Null(resultado.usuarioId);
-        Assert.Null(resultado.docenteId);
-        Assert.Null(resultado.correo);
-        Assert.Null(resultado.rol);
-        Assert.Equal("Credenciales incorrectas o la cuenta no es de docente.", resultado.error);
-    }
-
-    [Fact]
-    public async Task ValidarDocenteAsync_RechazaUnaContraseñaIncorrecta()
-    {
-        await using var db = CrearBaseDeDatos();
-        await ProgresoConsultaTestData.SeedAsync(db, 0);
-
-        var resultado = await new ProgresoConsultaService(db).ValidarDocenteAsync(
-            ProgresoConsultaTestData.DocenteCorreo,
-            "Contraseña incorrecta de prueba");
-
-        Assert.False(resultado.ok);
-        Assert.Null(resultado.usuarioId);
-        Assert.Null(resultado.docenteId);
-        Assert.Null(resultado.correo);
-        Assert.Null(resultado.rol);
-        Assert.Equal("Credenciales incorrectas o la cuenta no es de docente.", resultado.error);
-    }
-
     private static PortalDbContext CrearBaseDeDatos()
     {
         var options = new DbContextOptionsBuilder<PortalDbContext>()

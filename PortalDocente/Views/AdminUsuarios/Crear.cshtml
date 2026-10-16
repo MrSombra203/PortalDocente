@@ -1,0 +1,15 @@
+@model UsuarioAdministracionEditViewModel
+@{
+    ViewData["Title"] = "Crear usuario";
+    ViewData["EsCreacion"] = true;
+}
+
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">ADMINISTRACIÓN</p>
+        <h1>Crear usuario</h1>
+        <p class="page-subtitle">La cuenta recibirá un único rol del Portal Docente.</p>
+    </div>
+</section>
+
+<partial name="_FormularioUsuario" model="Model" />

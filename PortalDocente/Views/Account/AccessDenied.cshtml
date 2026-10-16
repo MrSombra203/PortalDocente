@@ -1,17 +1,29 @@
 @{
     ViewData["Title"] = "Acceso denegado";
+    var esEstudiante = User.IsInRole(ClaimsPrincipalExtensions.RolEstudiante);
 }
 
 <div class="login-page">
     <section class="login-form-side access-denied-side">
         <div class="login-form-card">
             <p class="eyebrow">ACCESO RESTRINGIDO</p>
-            <h2>No puedes entrar a este portal</h2>
-            <p class="page-subtitle">El Portal Docente es exclusivo para cuentas con rol de docente.</p>
-            <form asp-controller="Account" asp-action="Logout" method="post">
-                @Html.AntiForgeryToken()
-                <button class="button button-primary login-submit" type="submit">Volver al inicio de sesión</button>
-            </form>
+            <h2>Acceso denegado</h2>
+            <p class="page-subtitle">
+                @(esEstudiante
+                    ? "Los estudiantes no tienen acceso al Portal Docente."
+                    : "Tu cuenta no tiene permisos para consultar esta sección.")
+            </p>
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <form asp-controller="Account" asp-action="Logout" method="post">
+                    @Html.AntiForgeryToken()
+                    <button class="button button-primary login-submit" type="submit">Cerrar sesión</button>
+                </form>
+            }
+            else
+            {
+                <a class="button button-primary login-submit" asp-controller="Account" asp-action="Login">Volver al inicio de sesión</a>
+            }
         </div>
     </section>
 </div>
