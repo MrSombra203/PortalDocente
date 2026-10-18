@@ -11,6 +11,7 @@
 
 <section class="student-profile-heading">
     <a class="back-link" asp-controller="Estudiantes" asp-action="Index"><span aria-hidden="true">←</span> Volver a estudiantes</a>
+    <a class="button button-primary button-small" asp-controller="Estudiantes" asp-action="DescargarCsv" asp-route-id="@Model.EstudianteId">Descargar CSV</a>
     <div class="profile-identity">
         <span class="profile-avatar">@string.Join("", Model.NombreCompleto.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(p => p[0].ToString().ToUpperInvariant()))</span>
         <div>
