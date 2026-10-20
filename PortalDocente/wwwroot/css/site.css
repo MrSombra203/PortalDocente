@@ -115,34 +115,23 @@ button, a, input { -webkit-tap-highlight-color: transparent; }
   background: rgba(255,255,255,.96);
   backdrop-filter: blur(10px);
 }
-.top-search {
-  display: flex;
-  width: min(440px, 48vw);
-  height: 40px;
-  align-items: center;
-  gap: 9px;
-  padding: 0 10px 0 13px;
-  border: 1px solid var(--line);
-  border-radius: 9px;
-  color: #918e9f;
-  background: #fafafd;
+.top-search.input-container { width: min(220px, 36vw); position: relative; }
+.top-search .input {
+  width: 100%; height: 40px; padding: 10px 38px 10px 10px;
+  border: 2.5px solid #28243a; border-radius: 0; color: var(--ink); background: #fff;
+  font-size: 14px; letter-spacing: 1px; text-transform: uppercase; transition: .2s linear;
 }
-.top-search > span { font-size: 20px; line-height: 1; }
-.top-search input { width: 100%; min-width: 0; border: 0; outline: 0; color: var(--ink); background: transparent; }
-.top-search input:focus-visible { outline: 0; }
-.top-search button {
-  padding: 6px 10px;
-  border-radius: 5px;
-  color: #fff;
-  background: var(--purple);
-  box-shadow: 0 3px 0 #a999f4;
-  font-size: 11px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: transform .1s ease, box-shadow .1s ease, background-color .15s ease;
+.top-search .input:focus { outline: none; border: .5px solid #28243a; box-shadow: -5px -5px 0 #28243a; }
+.top-search .input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
+.top-search .icon {
+  position: absolute; top: calc(50% + 5px); right: 10px; color: #28243a; line-height: 0;
+  pointer-events: none; transform: translateY(calc(-50% - 5px));
 }
-.top-search button:hover { background: #49338f; }
-.top-search button:active { transform: translateY(3px); box-shadow: 0 0 0 #a999f4; }
+.top-search:hover > .icon { animation: top-search-anim 1s linear infinite; }
+@keyframes top-search-anim {
+  0%, 100% { transform: translateY(calc(-50% - 5px)) scale(1); }
+  50% { transform: translateY(calc(-50% - 5px)) scale(1.1); }
+}
 .topbar-right { display: flex; align-items: center; gap: 15px; margin-left: auto; }
 .user-chip { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .avatar, .student-avatar, .profile-avatar {
@@ -495,7 +484,7 @@ h2 { margin-bottom: 3px; font-size: 16px; font-weight: 700; letter-spacing: -.01
   .main-wrap { margin-left: 0; }
   .menu-btn { display: inline-grid; width: 34px; height: 38px; place-items: center; flex: 0 0 34px; }
   .topbar { min-height: 66px; gap: 12px; padding: 0 18px; }
-  .top-search { width: min(400px, 48vw); }
+  .top-search.input-container { width: min(220px, 36vw); }
   .content-area { padding: 25px 18px 40px; }
   .dashboard-grid, .detail-grid { grid-template-columns: 1fr; }
   .login-page { grid-template-columns: minmax(280px, .8fr) minmax(380px, 1.2fr); }
@@ -503,8 +492,7 @@ h2 { margin-bottom: 3px; font-size: 16px; font-weight: 700; letter-spacing: -.01
 
 @media (max-width: 680px) {
   .topbar { gap: 7px; padding: 0 12px; }
-  .top-search { width: auto; min-width: 0; flex: 1; padding-right: 7px; }
-  .top-search button { padding: 5px; font-size: 10px; }
+  .top-search.input-container { width: auto; min-width: 0; flex: 1; }
   .topbar-right { gap: 8px; }
   .user-chip { gap: 0; }
   .user-chip > span:last-child { display: none; }
@@ -563,7 +551,7 @@ h2 { margin-bottom: 3px; font-size: 16px; font-weight: 700; letter-spacing: -.01
 .admin-delete-button:hover { color: #fff; background: #7d1c2a; }
 .admin-delete-button:active { transform: translateY(4px); box-shadow: 0 0 0 #d9959d; }
 
-.button:disabled, .top-search button:disabled, .btn-logout:disabled, .admin-delete-button:disabled {
+.button:disabled, .btn-logout:disabled, .admin-delete-button:disabled {
   cursor: not-allowed;
   opacity: .6;
   transform: none;
@@ -578,6 +566,6 @@ h2 { margin-bottom: 3px; font-size: 16px; font-weight: 700; letter-spacing: -.01
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
-  .button, .top-search button, .btn-logout, .admin-delete-button { transition-duration: .01ms !important; }
+  .button, .btn-logout, .admin-delete-button, .top-search .input, .top-search .icon { transition-duration: .01ms !important; animation-duration: .01ms !important; }
   .loader-trace-flow { animation: none; stroke-dashoffset: 0; }
 }
