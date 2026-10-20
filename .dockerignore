@@ -1,0 +1,12 @@
+.git
+.vs
+**/bin
+**/obj
+**/*.user
+**/*.suo
+node_modules
+.env
+.env.*
+.neon
+session-state
+temp

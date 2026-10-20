@@ -7,14 +7,18 @@ using Npgsql;
 using PortalDocente.Data;
 using PortalDocente.Security;
 using PortalDocente.Services;
+using PortalDocente.Data.Connection;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
+builder.Services.AddHttpClient("NeonServicesHealth", client =>
+    client.Timeout = TimeSpan.FromSeconds(10));
 builder.Services.AddScoped<IProgresoConsultaService, ProgresoConsultaService>();
 builder.Services.AddScoped<IUsuarioAdministracionService, UsuarioAdministracionService>();
 builder.Services.AddScoped<IUsuarioAutenticacionService, UsuarioAutenticacionService>();
 builder.Services.AddScoped<ValidarUsuarioCookieEvents>();
+builder.Services.AddScoped<NeonServicesHealthService>();
 
 builder.Services.AddAntiforgery(options =>
 {
@@ -24,12 +28,18 @@ builder.Services.AddAntiforgery(options =>
     options.Cookie.SameSite = SameSiteMode.Lax;
 });
 
-var connectionString = builder.Configuration.GetConnectionString("PortalCentral");
+var environmentConnectionString = Environment.GetEnvironmentVariable("ConnectionStrings__PortalCentral");
+var databaseUrl = builder.Configuration["DATABASE_URL"];
+var connectionString = !string.IsNullOrWhiteSpace(environmentConnectionString)
+    ? environmentConnectionString
+    : !string.IsNullOrWhiteSpace(databaseUrl)
+        ? NeonDatabaseConnectionString.FromDatabaseUrl(databaseUrl)
+        : builder.Configuration.GetConnectionString("PortalCentral");
 
 if (string.IsNullOrWhiteSpace(connectionString))
 {
     throw new InvalidOperationException(
-        "Configura ConnectionStrings:PortalCentral para iniciar el portal.");
+        "Configura DATABASE_URL o ConnectionStrings:PortalCentral para iniciar el portal.");
 }
 
 builder.Services.AddSingleton(_ =>
@@ -134,6 +144,9 @@ app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapStaticAssets();
+app.MapControllers();
+app.MapGet("/health/live", () => Results.Ok(new { status = "ok" }))
+    .AllowAnonymous();
 
 app.MapControllerRoute(
     name: "default",
