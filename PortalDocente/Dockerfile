@@ -1,11 +1,11 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-COPY PortalDocente/PortalDocente.csproj PortalDocente/
-RUN dotnet restore PortalDocente/PortalDocente.csproj
+COPY PortalDocente.csproj ./
+RUN dotnet restore PortalDocente.csproj
 
 COPY . .
-RUN dotnet publish PortalDocente/PortalDocente.csproj \
+RUN dotnet publish PortalDocente.csproj \
     --configuration Release \
     --no-restore \
     --output /app/publish \

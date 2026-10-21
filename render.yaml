@@ -4,8 +4,8 @@ services:
     runtime: docker
     plan: free
     region: ohio
-    dockerfilePath: ./Dockerfile
-    dockerContext: .
+    dockerfilePath: ./PortalDocente/Dockerfile
+    dockerContext: ./PortalDocente
     healthCheckPath: /health/live
     envVars:
       - key: DATABASE_URL
