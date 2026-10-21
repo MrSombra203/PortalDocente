@@ -1,6 +1,6 @@
 using Npgsql;
 
-namespace PortalDocente.Data.Connection;
+namespace PortalDocente.Infrastructure.Database;
 
 public static class NeonDatabaseConnectionString
 {

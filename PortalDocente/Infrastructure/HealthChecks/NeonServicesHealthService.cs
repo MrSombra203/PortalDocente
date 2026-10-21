@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using PortalDocente.Data;
 
-namespace PortalDocente.Services;
+namespace PortalDocente.Infrastructure.HealthChecks;
 
 public sealed class NeonServicesHealthService
 {

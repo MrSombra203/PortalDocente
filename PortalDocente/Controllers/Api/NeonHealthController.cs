@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using PortalDocente.Services;
+using PortalDocente.Infrastructure.HealthChecks;
 
-namespace PortalDocente.Controllers;
+namespace PortalDocente.Controllers.Api;
 
 [ApiController]
 [Route("health/neon")]

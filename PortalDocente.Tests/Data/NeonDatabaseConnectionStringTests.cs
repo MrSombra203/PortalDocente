@@ -1,5 +1,5 @@
 using Npgsql;
-using PortalDocente.Data.Connection;
+using PortalDocente.Infrastructure.Database;
 using Xunit;
 
 namespace PortalDocente.Tests.Data;

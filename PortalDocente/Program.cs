@@ -7,7 +7,8 @@ using Npgsql;
 using PortalDocente.Data;
 using PortalDocente.Security;
 using PortalDocente.Services;
-using PortalDocente.Data.Connection;
+using PortalDocente.Infrastructure.Database;
+using PortalDocente.Infrastructure.HealthChecks;
 
 var builder = WebApplication.CreateBuilder(args);
 

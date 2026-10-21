@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using PortalDocente.Controllers;
+using PortalDocente.Controllers.Api;
 using PortalDocente.Data;
 using PortalDocente.Security;
 using PortalDocente.Tests.Services;
