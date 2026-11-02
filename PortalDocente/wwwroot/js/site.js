@@ -58,43 +58,83 @@
 })();
 
 (() => {
-    document.addEventListener("submit", (event) => {
-        const form = event.target;
-        if (form instanceof HTMLFormElement
-            && form.hasAttribute("data-confirm-delete")
-            && !window.confirm("¿Eliminar esta cuenta?")) {
-            event.preventDefault();
-        }
-    });
-})();
-
-(() => {
     const loader = document.getElementById("pageLoader");
-    if (!loader) return;
+    const message = loader?.querySelector("[data-loading-message]");
+    const announcement = loader?.querySelector("[data-loading-announcement]");
+    if (!loader || !(message instanceof HTMLElement) || !(announcement instanceof HTMLElement)) return;
 
-    const showLoader = () => {
+    let navegacionEnCurso = false;
+
+    const showLoader = (loadingMessage) => {
+        message.textContent = loadingMessage;
+        announcement.textContent = loadingMessage;
+        loader.setAttribute("aria-label", loadingMessage);
         loader.hidden = false;
         document.body.setAttribute("aria-busy", "true");
+    };
+
+    const restoreForm = (form) => {
+        form.removeAttribute("aria-busy");
+        delete form.dataset.submitting;
+        form.querySelectorAll("[data-previously-disabled]").forEach((control) => {
+            if (!(control instanceof HTMLButtonElement || control instanceof HTMLInputElement)) return;
+
+            control.disabled = control.dataset.previouslyDisabled === "true";
+            delete control.dataset.previouslyDisabled;
+        });
     };
 
     const hideLoader = () => {
         loader.hidden = true;
         document.body.removeAttribute("aria-busy");
+        navegacionEnCurso = false;
+        document.querySelectorAll("form[data-submitting='true']").forEach(restoreForm);
     };
 
     document.addEventListener("submit", (event) => {
         const form = event.target;
+        if (!(form instanceof HTMLFormElement)) return;
+
+        if (navegacionEnCurso || form.dataset.submitting === "true") {
+            event.preventDefault();
+            return;
+        }
+
         if (event.defaultPrevented
-            || !(form instanceof HTMLFormElement)
             || form.method.toLowerCase() === "dialog"
             || form.target && form.target.toLowerCase() !== "_self"
-            || event.submitter instanceof HTMLButtonElement
+            || event.submitter instanceof HTMLElement
+                && "formTarget" in event.submitter
                 && event.submitter.formTarget
                 && event.submitter.formTarget.toLowerCase() !== "_self") {
             return;
         }
 
-        showLoader();
+        if (form.hasAttribute("data-confirm-delete")
+            && !window.confirm("¿Eliminar esta cuenta?")) {
+            event.preventDefault();
+            return;
+        }
+
+        const submitter = event.submitter;
+        const loadingMessage = form.dataset.loadingMessage
+            || submitter?.dataset.loadingMessage
+            || "Procesando solicitud…";
+        navegacionEnCurso = true;
+        form.dataset.submitting = "true";
+        form.setAttribute("aria-busy", "true");
+        showLoader(loadingMessage);
+
+        form.querySelectorAll("button[type='submit'], input[type='submit'], input[type='image']")
+            .forEach((control) => {
+                if (!(control instanceof HTMLButtonElement || control instanceof HTMLInputElement)
+                    || control === submitter && control.name) {
+                    return;
+                }
+
+                control.dataset.previouslyDisabled = String(control.disabled);
+                control.disabled = true;
+            });
     });
 
     document.addEventListener("click", (event) => {
@@ -116,6 +156,11 @@
             return;
         }
 
+        if (navegacionEnCurso) {
+            event.preventDefault();
+            return;
+        }
+
         const destination = new URL(link.href, window.location.href);
         if (destination.origin !== window.location.origin
             || destination.pathname === window.location.pathname
@@ -123,7 +168,8 @@
             return;
         }
 
-        showLoader();
+        navegacionEnCurso = true;
+        showLoader(link.dataset.loadingMessage || "Cargando información…");
     });
 
     window.addEventListener("pageshow", hideLoader);

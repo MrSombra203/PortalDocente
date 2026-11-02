@@ -2,6 +2,14 @@
 
 Portal de consulta para docentes: resumen de actividad, búsqueda y seguimiento de estudiantes, resultados KPI e historial de partidas. Toda la información funcional se consulta desde PostgreSQL. El portal no incluye administración de cursos ni operaciones para crear, editar o eliminar registros.
 
+La interfaz utiliza el logotipo institucional en `PortalDocente/wwwroot/images/udla-logo.png` y una paleta de rojo, negro y tonos neutros. La marca conserva sus proporciones; el diseño se adapta a pantallas pequeñas.
+
+## Componentes de interfaz
+
+El loader de fantasma aparece durante envíos de formularios y navegación entre vistas completas; muestra un mensaje contextual y bloquea envíos repetidos mientras espera la respuesta. Los botones animados se usan en acciones principales y de riesgo. Los campos de acceso y administración conservan etiquetas visibles y estilos para foco, error y deshabilitado. Las animaciones respetan `prefers-reduced-motion`. La validación y el envío siguen siendo formularios MVC normales; el loader y el bloqueo preventivo del navegador requieren JavaScript.
+
+Los componentes Uiverse.io conservan la atribución de sus autores en `PortalDocente/wwwroot/css/site.css`. La licencia MIT y el detalle de las adaptaciones están en [THIRD-PARTY-NOTICES.md](./THIRD-PARTY-NOTICES.md).
+
 ## Requisitos y ejecución
 
 - .NET SDK 10

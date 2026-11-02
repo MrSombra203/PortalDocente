@@ -18,8 +18,9 @@
             <h2>Listado de estudiantes</h2>
             <p>Selecciona un perfil para revisar su historial de partidas y KPI.</p>
         </div>
-        <form asp-controller="Estudiantes" asp-action="Index" method="get" class="list-search student-search-form" role="search">
-            <label class="visually-hidden" for="student-search">Buscar estudiante</label>
+        <form asp-controller="Estudiantes" asp-action="Index" method="get" class="list-search student-search-form"
+              role="search" data-loading-message="Buscando estudiantes…">
+            <label class="student-search-label" for="student-search">Buscar estudiante</label>
             <div class="student-search-control">
                 <input id="student-search" type="search" name="q" value="@Model.Busqueda"
                        placeholder="Nombre, correo o código" autocomplete="off" />

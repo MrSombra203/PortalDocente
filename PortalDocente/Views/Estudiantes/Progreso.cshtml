@@ -10,8 +10,10 @@
 </nav>
 
 <section class="student-profile-heading">
-    <a class="back-link" asp-controller="Estudiantes" asp-action="Index"><span aria-hidden="true">←</span> Volver a estudiantes</a>
-    <a class="button button-primary button-small" asp-controller="Estudiantes" asp-action="DescargarCsv" asp-route-id="@Model.EstudianteId">Descargar CSV</a>
+    <a class="back-link" data-loading-message="Cargando estudiantes…"
+       asp-controller="Estudiantes" asp-action="Index"><span aria-hidden="true">←</span> Volver a estudiantes</a>
+    <a class="button button-primary button-small" asp-controller="Estudiantes"
+       asp-action="DescargarCsv" asp-route-id="@Model.EstudianteId">Descargar CSV</a>
     <div class="profile-identity">
         <span class="profile-avatar">@string.Join("", Model.NombreCompleto.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(p => p[0].ToString().ToUpperInvariant()))</span>
         <div>
@@ -28,7 +30,7 @@
 
 <section class="metric-grid detail-metrics" aria-label="Indicadores del estudiante">
     <article class="metric-card">
-        <div class="metric-icon icon-purple" aria-hidden="true">▤</div>
+        <div class="metric-icon icon-brand" aria-hidden="true">▤</div>
         <div><p>Partidas registradas</p><strong>@Model.TotalPartidas</strong><span>@Model.PartidasFinalizadas finalizadas</span></div>
     </article>
     <article class="metric-card">

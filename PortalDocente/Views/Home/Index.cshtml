@@ -9,12 +9,13 @@
         <h1>Resumen de progreso</h1>
         <p class="page-subtitle">Consulta la actividad y los resultados recientes de tus estudiantes.</p>
     </div>
-    <a class="button button-primary" asp-controller="Estudiantes" asp-action="Index">Ver estudiantes <span aria-hidden="true">→</span></a>
+    <a class="button button-primary" data-loading-message="Cargando estudiantes…"
+       asp-controller="Estudiantes" asp-action="Index">Ver estudiantes <span aria-hidden="true">→</span></a>
 </section>
 
 <section class="metric-grid" aria-label="Indicadores del curso">
     <article class="metric-card">
-        <div class="metric-icon icon-purple" aria-hidden="true">◎</div>
+        <div class="metric-icon icon-brand" aria-hidden="true">◎</div>
         <div><p>Estudiantes</p><strong>@Model.TotalEstudiantes</strong><span>en tus cohortes</span></div>
     </article>
     <article class="metric-card">
