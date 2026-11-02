@@ -152,22 +152,32 @@ public class ProgresoConsultaService : IProgresoConsultaService
 
         var estudianteIds = estudiantes.Select(e => e.Id).ToList();
 
-        var partidas = await _db.Partidas
+        var resumenesPartidas = await _db.Partidas
             .AsNoTracking()
-            .Include(p => p.Kpi)
             .Where(p => estudianteIds.Contains(p.EstudianteId))
-            .ToListAsync(cancellationToken);
-        var partidasPorEstudiante = partidas
             .GroupBy(partida => partida.EstudianteId)
-            .ToDictionary(
-                grupo => grupo.Key,
-                grupo => grupo.OrderByDescending(partida => partida.FechaCreacion).ToList());
+            .Select(grupo => new
+            {
+                EstudianteId = grupo.Key,
+                Total = grupo.Count(),
+                UltimaPartida = grupo
+                    .OrderByDescending(partida => partida.FechaCreacion)
+                    .ThenByDescending(partida => partida.Id)
+                    .Select(partida => new
+                    {
+                        partida.FechaCreacion,
+                        Puntuacion = partida.Kpi == null
+                            ? (decimal?)null
+                            : partida.Kpi.PuntuacionGlobal
+                    })
+                    .FirstOrDefault()
+            })
+            .ToDictionaryAsync(resumen => resumen.EstudianteId, cancellationToken);
 
         var items = estudiantes.Select(e =>
         {
-            var partidasEst = partidasPorEstudiante.GetValueOrDefault(e.Id) ?? [];
-
-            var ultima = partidasEst.FirstOrDefault();
+            var resumen = resumenesPartidas.GetValueOrDefault(e.Id);
+            var ultimaPartida = resumen?.UltimaPartida;
             var matricula = e.Matriculas
                 .Where(m => m.Cohorte.DocenteId == docenteId && m.Estado == "activo")
                 .OrderByDescending(m => m.MatriculadoEn)
@@ -183,10 +193,10 @@ public class ProgresoConsultaService : IProgresoConsultaService
                 Correo = e.Usuario.Correo,
                 CodigoInstitucional = e.CodigoInstitucional,
                 CursoCohorte = cursoCohorte,
-                UltimaActividad = ultima?.FechaCreacion,
-                PartidasRegistradas = partidasEst.Count,
-                EstadoProgreso = partidasEst.Count == 0 ? "Sin progreso" : "Con progreso",
-                UltimaPuntuacion = ultima?.Kpi?.PuntuacionGlobal
+                UltimaActividad = ultimaPartida?.FechaCreacion,
+                PartidasRegistradas = resumen?.Total ?? 0,
+                EstadoProgreso = resumen == null ? "Sin progreso" : "Con progreso",
+                UltimaPuntuacion = ultimaPartida?.Puntuacion
             };
         }).ToList();
 

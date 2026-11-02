@@ -1,6 +1,8 @@
+using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
 using PortalDocente.Data;
 using PortalDocente.Data.Entities;
+using PortalDocente.Models.ViewModels;
 using PortalDocente.Security;
 using PortalDocente.Services;
 using Xunit;
@@ -86,6 +88,24 @@ public class UsuarioAutenticacionServiceTests
 
         Assert.Null(resultado.Usuario);
         Assert.Equal("Credenciales incorrectas.", resultado.Error);
+    }
+
+    [Fact]
+    public void LoginViewModel_RechazaCorreoQueSuperaElLimiteDelEsquema()
+    {
+        var modelo = new LoginViewModel
+        {
+            Correo = $"{new string('a', 310)}@ejemplo.edu",
+            Password = "Clave-de-prueba-123!"
+        };
+        var errores = new List<ValidationResult>();
+
+        var valido = Validator.TryValidateObject(
+            modelo, new ValidationContext(modelo), errores, validateAllProperties: true);
+
+        Assert.False(valido);
+        Assert.Contains(errores, error =>
+            error.ErrorMessage == "El correo no puede superar los 320 caracteres.");
     }
 
     private static PortalDbContext CrearBaseDeDatos()

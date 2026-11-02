@@ -41,6 +41,83 @@ public class ProgresoConsultaServiceTests
     }
 
     [Fact]
+    public async Task ListarEstudiantesAsync_DevuelveResumenYExcluyePartidasEliminadas()
+    {
+        await using var db = CrearBaseDeDatos();
+        await ProgresoConsultaTestData.SeedAsync(db, 1);
+
+        var estudiante = await db.Estudiantes.SingleAsync();
+        var fechaBase = DateTimeOffset.UtcNow;
+        var escenario = new Escenario
+        {
+            Id = Guid.NewGuid(),
+            CohorteId = (await db.Cohortes.SingleAsync()).Id,
+            Nombre = "Escenario de prueba",
+            CreadoEn = fechaBase,
+            ActualizadoEn = fechaBase
+        };
+        var nivel = new Nivel
+        {
+            Id = Guid.NewGuid(),
+            EscenarioId = escenario.Id,
+            Numero = 1
+        };
+        var partidaAnterior = new Partida
+        {
+            Id = Guid.NewGuid(),
+            EstudianteId = estudiante.Id,
+            NivelId = nivel.Id,
+            FechaCreacion = fechaBase.AddDays(-2),
+            FechaRecepcion = fechaBase.AddDays(-2)
+        };
+        var ultimaPartida = new Partida
+        {
+            Id = Guid.NewGuid(),
+            EstudianteId = estudiante.Id,
+            NivelId = nivel.Id,
+            FechaCreacion = fechaBase.AddDays(-1),
+            FechaRecepcion = fechaBase.AddDays(-1)
+        };
+        var partidaEliminada = new Partida
+        {
+            Id = Guid.NewGuid(),
+            EstudianteId = estudiante.Id,
+            NivelId = nivel.Id,
+            FechaCreacion = fechaBase,
+            FechaRecepcion = fechaBase,
+            Eliminado = true
+        };
+
+        db.Escenarios.Add(escenario);
+        db.Niveles.Add(nivel);
+        db.Partidas.AddRange(partidaAnterior, ultimaPartida, partidaEliminada);
+        db.Kpis.AddRange(
+            new Kpi
+            {
+                Id = Guid.NewGuid(),
+                PartidaId = partidaAnterior.Id,
+                PuntuacionGlobal = 92,
+                FechaCreacion = partidaAnterior.FechaCreacion
+            },
+            new Kpi
+            {
+                Id = Guid.NewGuid(),
+                PartidaId = ultimaPartida.Id,
+                PuntuacionGlobal = 84,
+                FechaCreacion = ultimaPartida.FechaCreacion
+            });
+        await db.SaveChangesAsync();
+
+        var resultado = await new ProgresoConsultaService(db)
+            .ListarEstudiantesAsync(ProgresoConsultaTestData.DocenteId, null);
+
+        var resumen = Assert.Single(resultado.Estudiantes);
+        Assert.Equal(2, resumen.PartidasRegistradas);
+        Assert.Equal(ultimaPartida.FechaCreacion, resumen.UltimaActividad);
+        Assert.Equal(84, resumen.UltimaPuntuacion);
+    }
+
+    [Fact]
     public async Task ObtenerProgresoAsync_MuestraLaFechaDelUltimoKpi()
     {
         await using var db = CrearBaseDeDatos();

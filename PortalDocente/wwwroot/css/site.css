@@ -203,7 +203,7 @@ h2 { margin-bottom: 3px; font-size: 16px; font-weight: 700; letter-spacing: -.01
 .metric-card p { margin: 1px 0 4px; color: var(--muted); font-size: 11px; }
 .metric-card strong { display: block; font-size: 25px; line-height: 1.15; font-variant-numeric: tabular-nums; }
 .metric-card strong small { margin-left: 3px; font-size: 11px; font-weight: 600; }
-.metric-card span { display: block; margin-top: 5px; color: #9794a4; font-size: 10px; }
+.metric-card span { display: block; margin-top: 5px; color: var(--muted); font-size: 10px; }
 .metric-card .metric-date { padding-top: 5px; font-size: 18px; }
 
 .dashboard-grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(300px, 1fr); gap: 17px; margin-bottom: 18px; }
@@ -213,12 +213,12 @@ h2 { margin-bottom: 3px; font-size: 16px; font-weight: 700; letter-spacing: -.01
 .chart-legend { display: inline-flex; align-items: center; gap: 7px; color: var(--muted); font-size: 10px; white-space: nowrap; }
 .chart-legend i { width: 8px; height: 8px; border-radius: 50%; background: var(--brand); }
 .chart-wrap { display: flex; height: 187px; align-items: stretch; gap: 10px; }
-.chart-scale { display: flex; flex-direction: column; justify-content: space-between; padding: 18px 0 17px; color: #9693a3; font-size: 9px; }
+.chart-scale { display: flex; flex-direction: column; justify-content: space-between; padding: 18px 0 17px; color: var(--muted); font-size: 9px; }
 .line-chart { width: 100%; height: 100%; overflow: visible; }
 .chart-gridline { stroke: #eeedf3; stroke-width: 1; }
 .chart-line { fill: none; stroke: var(--brand); stroke-linecap: round; stroke-linejoin: round; stroke-width: 3; }
 .chart-dot { fill: #fff; stroke: var(--brand); stroke-width: 3; }
-.chart-labels { display: flex; justify-content: space-between; gap: 7px; padding: 5px 2px 0 33px; color: #9693a3; font-size: 10px; }
+.chart-labels { display: flex; justify-content: space-between; gap: 7px; padding: 5px 2px 0 33px; color: var(--muted); font-size: 10px; }
 .activity-list { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
 .activity-list li { display: flex; min-width: 0; align-items: center; gap: 11px; padding: 12px 0; border-top: 1px solid #f1f0f5; }
 .activity-list li:first-child { padding-top: 0; border-top: 0; }
@@ -227,7 +227,7 @@ h2 { margin-bottom: 3px; font-size: 16px; font-weight: 700; letter-spacing: -.01
 .activity-copy strong, .activity-copy span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .activity-copy strong { font-size: 11px; }
 .activity-copy span { margin-top: 2px; color: var(--muted); font-size: 11px; }
-.activity-list time { color: #9996a5; font-size: 11px; white-space: nowrap; }
+.activity-list time { color: var(--muted); font-size: 11px; white-space: nowrap; }
 .student-card-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .student-card { display: flex; min-width: 0; align-items: center; gap: 11px; padding: 13px; border: 1px solid #efedf4; border-radius: 10px; transition: border-color .15s ease, background .15s ease; }
 .student-card:hover { border-color: #efc3cb; background: #fffafb; }
@@ -344,20 +344,20 @@ h2 { margin-bottom: 3px; font-size: 16px; font-weight: 700; letter-spacing: -.01
 .table-person .student-avatar { width: 34px; height: 34px; }
 .table-person strong, .table-person small { display: block; }
 .table-person strong, .data-table td strong { color: var(--ink); font-size: 10px; }
-.table-person small, .table-secondary { margin-top: 2px; color: #9794a4; font-size: 10px; }
+.table-person small, .table-secondary { margin-top: 2px; color: var(--muted); font-size: 10px; }
 .table-secondary { display: block; }
 .progress-status { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 18px; font-size: 10px; font-weight: 650; }
 .progress-status i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 .has-progress { color: #13805f; background: #e8f6f0; }
 .no-progress { color: #898697; background: #f1f0f4; }
 .row-link { white-space: nowrap; }
-.table-caption { margin: 0; padding: 12px 21px; border-top: 1px solid var(--line); color: #9693a3; font-size: 11px; }
+.table-caption { margin: 0; padding: 12px 21px; border-top: 1px solid var(--line); color: var(--muted); font-size: 11px; }
 .pagination { display: flex; align-items: center; justify-content: center; gap: 16px; padding: 0 16px 16px; color: var(--muted); font-size: 12px; }
 .pagination-link { padding: 7px 10px; border: 1px solid var(--line); border-radius: 7px; color: var(--ink); text-decoration: none; }
 .pagination-link:hover { border-color: var(--brand); color: var(--brand); }
 .students-panel > .empty-state { border-top: 1px solid var(--line); }
 
-.breadcrumbs { display: flex; flex-wrap: wrap; gap: 9px; margin: 0 0 18px; color: #9996a5; font-size: 10px; }
+.breadcrumbs { display: flex; flex-wrap: wrap; gap: 9px; margin: 0 0 18px; color: var(--muted); font-size: 10px; }
 .breadcrumbs a { color: var(--brand); font-weight: 600; }
 .student-profile-heading { margin-bottom: 21px; }
 .back-link { display: inline-block; margin-bottom: 18px; }
@@ -411,7 +411,7 @@ h2 { margin-bottom: 3px; font-size: 16px; font-weight: 700; letter-spacing: -.01
   font: inherit;
   transition: border-color .2s ease, box-shadow .2s ease, background-color .2s ease, transform .2s ease;
 }
-.portal-input::placeholder { color: #77777e; opacity: 1; }
+.portal-input::placeholder { color: var(--muted); opacity: 1; }
 .portal-input:hover:not(:disabled):not(:focus) {
   border-color: #c9808c;
   background: #fffafb;
@@ -423,7 +423,7 @@ h2 { margin-bottom: 3px; font-size: 16px; font-weight: 700; letter-spacing: -.01
 .portal-input[aria-invalid="false"] { border-color: #168b70; }
 .portal-input:disabled { color: #77777e; background: #f0f0f1; cursor: not-allowed; opacity: .8; }
 .login-submit { width: 100%; height: 45px; margin-top: 3px; }
-.login-footnote { margin: 19px 0 0; color: #9996a5; font-size: 10px; text-align: center; }
+.login-footnote { margin: 19px 0 0; color: var(--muted); font-size: 10px; text-align: center; }
 .field-error, .validation-summary { color: #ad3140; font-size: 10px; }
 .validation-summary:empty { display: none; }
 .validation-summary ul { margin: 0; padding-left: 18px; }

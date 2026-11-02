@@ -31,6 +31,8 @@ Neon puede proporcionar su URI PostgreSQL como `DATABASE_URL`; el portal la conv
 
 `GET /health/neon` comprueba conectividad con PostgreSQL, la disponibilidad del JWKS de Neon Auth y la función `hello` declarada en `neon.ts`. La autenticación de usuarios del portal continúa usando el esquema y las cookies existentes; el JWKS probe solo comprueba el servicio administrado y no cambia el flujo de inicio de sesión.
 
+Para que `/health/neon` responda correctamente en Render, además de `DATABASE_URL` configura `NEON_AUTH_JWKS_URL` y `NEON_FUNCTION_HELLO_BASE_URL` con las direcciones de esos servicios en Neon. Estas dos variables solo habilitan sus comprobaciones de salud: el portal no depende de Neon Auth ni de la función para iniciar sesión o consultar datos. Si faltan, `/health/neon` informa `not_configured` y responde 503; el chequeo de disponibilidad de Render continúa usando `/health/live`.
+
 El proyecto Neon está configurado para PostgreSQL, Auth y Functions. AI Gateway se omitió porque el plan Free no permite provisionarlo.
 
 ## Despliegue en Render

@@ -6,6 +6,7 @@ public class LoginViewModel
 {
     [Required(ErrorMessage = "Ingresa el correo.")]
     [EmailAddress(ErrorMessage = "Correo no válido.")]
+    [StringLength(320, ErrorMessage = "El correo no puede superar los 320 caracteres.")]
     [Display(Name = "Correo")]
     public string Correo { get; set; } = string.Empty;
 
