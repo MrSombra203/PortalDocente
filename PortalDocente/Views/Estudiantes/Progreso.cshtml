@@ -10,10 +10,12 @@
 </nav>
 
 <section class="student-profile-heading">
-    <a class="back-link" data-loading-message="Cargando estudiantes…"
-       asp-controller="Estudiantes" asp-action="Index"><span aria-hidden="true">←</span> Volver a estudiantes</a>
-    <a class="button button-primary button-small" asp-controller="Estudiantes"
-       asp-action="DescargarCsv" asp-route-id="@Model.EstudianteId">Descargar CSV</a>
+    <div class="profile-actions">
+        <a class="back-link" data-loading-message="Cargando estudiantes…"
+           asp-controller="Estudiantes" asp-action="Index"><span aria-hidden="true">←</span> Volver a estudiantes</a>
+        <a class="button button-primary button-small" asp-controller="Estudiantes"
+           asp-action="DescargarCsv" asp-route-id="@Model.EstudianteId">Descargar CSV</a>
+    </div>
     <div class="profile-identity">
         <span class="profile-avatar">@string.Join("", Model.NombreCompleto.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(p => p[0].ToString().ToUpperInvariant()))</span>
         <div>
@@ -133,7 +135,7 @@ else
             <div><h2>Historial de partidas</h2><p>Resultados registrados para este estudiante</p></div>
             <span class="count-pill">@(Model.Historial.Count == 1 ? "1 partida" : $"{Model.Historial.Count} partidas")</span>
         </div>
-        <div class="table-scroll">
+        <div class="table-scroll" tabindex="0" role="region" aria-label="Historial de partidas del estudiante">
             <table class="data-table">
                 <thead>
                     <tr>
