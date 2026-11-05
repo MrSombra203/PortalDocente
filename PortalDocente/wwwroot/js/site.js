@@ -110,8 +110,9 @@
             return;
         }
 
-        if (form.hasAttribute("data-confirm-delete")
-            && !window.confirm("¿Eliminar esta cuenta?")) {
+        const confirmMessage = form.dataset.confirmMessage
+            || (form.hasAttribute("data-confirm-delete") ? "¿Eliminar esta cuenta?" : "");
+        if (confirmMessage && !window.confirm(confirmMessage)) {
             event.preventDefault();
             return;
         }

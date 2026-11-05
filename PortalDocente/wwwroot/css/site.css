@@ -336,7 +336,7 @@ h2 { margin-bottom: 3px; font-size: 16px; font-weight: 700; letter-spacing: -.01
 }
 .student-search-clear:hover { color: var(--brand); background: #fff1f3; }
 .student-search-clear:focus-visible { outline-offset: 1px; }
-.table-scroll { width: 100%; overflow-x: auto; }
+.table-scroll { width: 100%; overflow-x: auto; contain: paint; }
 .table-scroll:focus-visible { outline: 3px solid rgba(196, 31, 58, .24); outline-offset: -3px; }
 .data-table { width: 100%; border-collapse: collapse; text-align: left; }
 .data-table thead { color: #5e5c67; background: #faf9fc; }

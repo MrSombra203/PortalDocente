@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using PortalDocente.Data;
+using PortalDocente.Data.Entities;
 using PortalDocente.Models.ViewModels;
 
 namespace PortalDocente.Services;
@@ -13,14 +14,14 @@ public class ProgresoConsultaService : IProgresoConsultaService
         _db = db;
     }
 
-    private static IQueryable<Guid> EstudiantesDelDocente(PortalDbContext db, Guid docenteId) =>
+    private static IQueryable<Estudiante> EstudiantesDelDocente(PortalDbContext db, Guid docenteId) =>
         db.Estudiantes
-            .Where(e => e.Matriculas.Any(m => m.Cohorte.DocenteId == docenteId && m.Estado == "activo"))
-            .Select(e => e.Id);
+            .AsNoTracking()
+            .Where(e => e.Matriculas.Any(m => m.Cohorte.DocenteId == docenteId && m.Estado == "activo"));
 
     public async Task<DashboardViewModel> ObtenerDashboardAsync(Guid docenteId, CancellationToken cancellationToken = default)
     {
-        var estudianteIds = EstudiantesDelDocente(_db, docenteId);
+        var estudianteIds = EstudiantesDelDocente(_db, docenteId).Select(e => e.Id);
 
         var totalEstudiantes = await estudianteIds.CountAsync(cancellationToken);
         var conProgreso = await _db.Partidas
@@ -120,10 +121,7 @@ public class ProgresoConsultaService : IProgresoConsultaService
     public async Task<EstudiantesIndexViewModel> ListarEstudiantesAsync(
         Guid docenteId, string? busqueda, int pagina = 1, CancellationToken cancellationToken = default)
     {
-        var query = _db.Estudiantes
-            .AsNoTracking()
-            .Where(e => e.Matriculas.Any(m => m.Cohorte.DocenteId == docenteId && m.Estado == "activo"))
-            .AsQueryable();
+        var query = EstudiantesDelDocente(_db, docenteId);
 
         if (!string.IsNullOrWhiteSpace(busqueda))
         {
@@ -214,9 +212,7 @@ public class ProgresoConsultaService : IProgresoConsultaService
     public async Task<ProgresoEstudianteViewModel?> ObtenerProgresoAsync(
         Guid docenteId, Guid estudianteId, CancellationToken cancellationToken = default)
     {
-        var estudiante = await _db.Estudiantes
-            .AsNoTracking()
-            .Where(e => e.Matriculas.Any(m => m.Cohorte.DocenteId == docenteId && m.Estado == "activo"))
+        var estudiante = await EstudiantesDelDocente(_db, docenteId)
             .Include(e => e.Usuario)
             .Include(e => e.Matriculas)
                 .ThenInclude(m => m.Cohorte)

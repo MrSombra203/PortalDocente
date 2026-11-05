@@ -41,6 +41,68 @@ public class ProgresoConsultaServiceTests
     }
 
     [Fact]
+    public async Task ConsultasDeDocente_ExcluyenEstudiantesDeOtrasCohortes()
+    {
+        await using var db = CrearBaseDeDatos();
+        await ProgresoConsultaTestData.SeedAsync(db, 1);
+
+        var fecha = DateTimeOffset.UtcNow;
+        var otroDocente = new Docente
+        {
+            Id = Guid.NewGuid(),
+            UsuarioId = Guid.NewGuid(),
+            CreadoEn = fecha
+        };
+        var otraCohorte = new Cohorte
+        {
+            Id = Guid.NewGuid(),
+            CursoId = (await db.Cursos.SingleAsync()).Id,
+            DocenteId = otroDocente.Id,
+            Nombre = "Cohorte de otro docente",
+            CreadoEn = fecha
+        };
+        var usuarioEstudiante = new Usuario
+        {
+            Id = Guid.NewGuid(),
+            Correo = "otro-estudiante@example.test",
+            PasswordHash = "hash de prueba",
+            NombreCompleto = "Estudiante de otra cohorte",
+            Activo = true,
+            CreadoEn = fecha,
+            ActualizadoEn = fecha
+        };
+        var estudiante = new Estudiante
+        {
+            Id = Guid.NewGuid(),
+            UsuarioId = usuarioEstudiante.Id,
+            CreadoEn = fecha
+        };
+
+        db.Docentes.Add(otroDocente);
+        db.Cohortes.Add(otraCohorte);
+        db.Usuarios.Add(usuarioEstudiante);
+        db.Estudiantes.Add(estudiante);
+        db.CursosEstudiantes.Add(new CursoEstudiante
+        {
+            Id = Guid.NewGuid(),
+            EstudianteId = estudiante.Id,
+            CohorteId = otraCohorte.Id,
+            Estado = "activo",
+            MatriculadoEn = fecha
+        });
+        await db.SaveChangesAsync();
+
+        var service = new ProgresoConsultaService(db);
+        var listado = await service.ListarEstudiantesAsync(ProgresoConsultaTestData.DocenteId, null);
+        var dashboard = await service.ObtenerDashboardAsync(ProgresoConsultaTestData.DocenteId);
+        var progreso = await service.ObtenerProgresoAsync(ProgresoConsultaTestData.DocenteId, estudiante.Id);
+
+        Assert.Single(listado.Estudiantes);
+        Assert.Equal(1, dashboard.TotalEstudiantes);
+        Assert.Null(progreso);
+    }
+
+    [Fact]
     public async Task ListarEstudiantesAsync_DevuelveResumenYExcluyePartidasEliminadas()
     {
         await using var db = CrearBaseDeDatos();

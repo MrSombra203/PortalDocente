@@ -5,7 +5,8 @@
 
 <section class="panel admin-form-panel">
     <form asp-action="@(esCreacion ? "Crear" : "Editar")" asp-route-id="@(esCreacion ? null : Model.Id)"
-          method="post" data-loading-message="@(esCreacion ? "Creando cuenta…" : "Guardando cambios…")">
+          method="post" data-loading-message="@(esCreacion ? "Creando cuenta…" : "Guardando cambios…")"
+          data-confirm-message="@(esCreacion ? string.Empty : "¿Guardar los cambios de esta cuenta y sus permisos?")">
         @Html.AntiForgeryToken()
         <div asp-validation-summary="ModelOnly" class="validation-summary" role="alert"></div>
         <input asp-for="Id" type="hidden" />
