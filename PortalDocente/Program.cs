@@ -1,25 +1,38 @@
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using PortalDocente.Data;
+using PortalDocente.Models.Api;
 using PortalDocente.Security;
 using PortalDocente.Services;
 using PortalDocente.Infrastructure.Database;
 using PortalDocente.Infrastructure.HealthChecks;
+using System.Security.Claims;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
+builder.Services.AddOpenApi();
 builder.Services.AddHttpClient("NeonServicesHealth", client =>
     client.Timeout = TimeSpan.FromSeconds(10));
 builder.Services.AddScoped<IProgresoConsultaService, ProgresoConsultaService>();
+builder.Services.AddScoped<IResultadoRegistroService, ResultadoRegistroService>();
 builder.Services.AddScoped<IUsuarioAdministracionService, UsuarioAdministracionService>();
 builder.Services.AddScoped<IUsuarioAutenticacionService, UsuarioAutenticacionService>();
+builder.Services.AddSingleton<IUnityTokenService, UnityTokenService>();
 builder.Services.AddScoped<ValidarUsuarioCookieEvents>();
 builder.Services.AddScoped<NeonServicesHealthService>();
+builder.Services.Configure<UnityJwtOptions>(
+    builder.Configuration.GetSection(UnityJwtOptions.SectionName));
+
+var jwtOptions = builder.Configuration.GetSection(UnityJwtOptions.SectionName).Get<UnityJwtOptions>()
+                 ?? new UnityJwtOptions();
 
 builder.Services.AddAntiforgery(options =>
 {
@@ -67,6 +80,26 @@ builder.Services
         options.Cookie.SameSite = SameSiteMode.Lax;
         options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
         options.EventsType = typeof(ValidarUsuarioCookieEvents);
+    })
+    .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
+    {
+        var signingKey = string.IsNullOrWhiteSpace(jwtOptions.SigningKey)
+            ? null
+            : new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.SigningKey));
+
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = signingKey,
+            ValidateIssuer = true,
+            ValidIssuer = jwtOptions.Issuer,
+            ValidateAudience = true,
+            ValidAudience = jwtOptions.Audience,
+            ValidateLifetime = true,
+            NameClaimType = ClaimTypes.Name,
+            RoleClaimType = ClaimTypes.Role,
+            ClockSkew = TimeSpan.FromSeconds(30)
+        };
     });
 
 builder.Services.AddAuthorization(options =>
@@ -80,6 +113,15 @@ builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
     options.AddPolicy("login", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            httpContext.Connection.RemoteIpAddress?.ToString() ?? "anonimo",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 8,
+                Window = TimeSpan.FromMinutes(5),
+                QueueLimit = 0
+            }));
+    options.AddPolicy("unity-login", httpContext =>
         RateLimitPartition.GetFixedWindowLimiter(
             httpContext.Connection.RemoteIpAddress?.ToString() ?? "anonimo",
             _ => new FixedWindowRateLimiterOptions
@@ -148,6 +190,8 @@ app.MapStaticAssets();
 app.MapControllers();
 app.MapGet("/health/live", () => Results.Ok(new { status = "ok" }))
     .AllowAnonymous();
+if (app.Environment.IsDevelopment())
+    app.MapOpenApi().AllowAnonymous();
 
 app.MapControllerRoute(
     name: "default",

@@ -14,6 +14,7 @@ Los componentes Uiverse.io conservan la atribución de sus autores en `PortalDoc
 
 - .NET SDK 10
 - PostgreSQL con la base `portal_docente` y el esquema existente del sistema
+- Una clave JWT de al menos 32 bytes para habilitar el acceso de Unity
 
 En desarrollo, `appsettings.Development.json` configura el host local, puerto, base y usuario. Guarda la contraseña únicamente en User Secrets:
 
@@ -26,6 +27,8 @@ En el primer comando, sustituye `******` por la contraseña de PostgreSQL de est
 Si ya configuraste User Secrets en este equipo, basta iniciar el proyecto con F5 o ejecutar el segundo comando. No guardes credenciales en `appsettings*.json` ni las compartas en el repositorio.
 
 En otros ambientes, configura `ConnectionStrings__PortalCentral` como variable de entorno. Si PostgreSQL no está disponible durante el inicio, el portal registra el error y permanece iniciado; una solicitud que requiera la base devuelve una página de error genérica. Sin cadena de conexión, el inicio falla con un error de configuración explícito.
+
+Para habilitar el inicio de sesión del videojuego, configura `Authentication__Jwt__SigningKey` mediante User Secrets en desarrollo o como variable secreta en Render. Usa un valor aleatorio de al menos 32 bytes y no lo incluyas en Unity, `appsettings*.json` ni en Git. Sin esta clave, las vistas del portal siguen disponibles, pero el endpoint de Unity responde `503`.
 
 Neon puede proporcionar su URI PostgreSQL como `DATABASE_URL`; el portal la convierte a una cadena compatible con Npgsql y conserva TLS y `channel_binding`. `ConnectionStrings__PortalCentral` tiene prioridad cuando se configura explícitamente. El archivo `.env.local` generado por `neon env pull` no se carga automáticamente en .NET: importa sus variables al entorno del proceso antes de iniciar el portal.
 
@@ -40,7 +43,7 @@ El proyecto Neon está configurado para PostgreSQL, Auth y Functions. AI Gateway
 El repositorio incluye un `Dockerfile` multi-stage para .NET 10, un Blueprint `render.yaml` y el endpoint público `/health/live` para comprobar que la aplicación inició. El contenedor escucha en el puerto `10000`, confía en los encabezados del proxy HTTPS de Render y ejecuta la aplicación con el usuario no privilegiado de la imagen oficial. El `.dockerignore` excluye `.env.local`, `.neon`, archivos de compilación y dependencias locales.
 
 1. Publica este repositorio en GitHub y en Render crea un **Blueprint** desde el repositorio. Render detectará `render.yaml` y construirá el servicio web `portal-docente` con Docker en Ohio, cerca del proyecto Neon `us-east-2`.
-2. Cuando Render solicite `DATABASE_URL`, copia el valor actual de `DATABASE_URL` de `.env.local` (URI PostgreSQL con el host `-pooler`) o de Neon Console → **Connect**. Pégalo directamente en el campo secreto de Render; no lo agregues a `render.yaml`, al repositorio ni al Dockerfile. Si configuras o actualizas el valor después de crear el Blueprint, hazlo en **Environment** y selecciona guardar y desplegar.
+2. Cuando Render solicite `DATABASE_URL` y `Authentication__Jwt__SigningKey`, configura ambos como secretos desde Neon Console → **Connect** y generando una clave aleatoria de al menos 32 bytes, respectivamente. No los agregues al repositorio ni al Dockerfile. Si configuras o actualizas los valores después de crear el Blueprint, hazlo en **Environment** y selecciona guardar y desplegar.
 3. Espera a que el build y el chequeo `/health/live` tengan éxito. Render usa el plan gratuito para evitar cargos inesperados; los servicios gratuitos pueden suspenderse cuando están inactivos y tardar en despertar.
 
 La instancia necesita `DATABASE_URL` de Neon para conectar. El portal conserva su autenticación local con cookies; activar el servicio Neon Auth no migra por sí solo el inicio de sesión de la aplicación.
@@ -49,7 +52,15 @@ La instancia necesita `DATABASE_URL` de Neon para conectar. El portal conserva s
 
 El login consulta `usuarios`, comprueba que la cuenta esté activa y que tenga exactamente un rol permitido en `usuarios_roles`: `admin`, `docente` o `estudiante`. Los docentes necesitan perfil en `docentes`; los estudiantes necesitan perfil en `estudiantes`, pero sus credenciales se rechazan explícitamente en este portal. Las contraseñas se guardan con BCrypt.
 
-Los administradores ingresan únicamente a la gestión de usuarios en `/Admin/Usuarios`. Desde allí pueden crear, consultar, actualizar y eliminar cuentas, asignando un rol único. No pueden consultar la información académica del docente. Las cuentas con matrículas, partidas o cohortes relacionadas no se eliminan; el último administrador activo tampoco puede quedar deshabilitado o perder su rol. La aplicación verifica la cuenta y su rol actual al validar cada solicitud autenticada.
+Los administradores ingresan únicamente a la gestión de usuarios en `/Admin/Usuarios`. Desde allí pueden crear, consultar, actualizar y eliminar cuentas, asignando un rol único. No pueden consultar la información académica del docente. Las cuentas con matrículas, partidas o cohortes relacionadas no se eliminan; el último administrador activo tampoco puede quedar deshabilitado o perder su rol. La aplicación verifica la cuenta y su rol actual al validar cada solicitud autenticada. El login MVC mantiene el rechazo explícito de estudiantes; la ruta `/api/unity/login` autentica cuentas con rol estudiante y entrega un token temporal para el videojuego.
+
+## Integración con Unity
+
+El videojuego de PC envía cada resultado a `POST /api/resultados/registrar` con un token Bearer obtenido desde `POST /api/unity/login`. El endpoint verifica que el estudiante del JSON corresponda al token, que su usuario esté activo, y que el escenario/nivel exactos estén asociados a una cohorte activa del estudiante. No requiere CORS para el cliente Standalone; si se crea una versión WebGL, se deberá configurar una lista explícita de orígenes permitidos.
+
+La integración reutiliza las tablas existentes `partidas` y `kpi`; no agrega entidades ni modifica el esquema. La clave de idempotencia enviada por el juego también se usa como UUID de la partida, aprovechando la clave primaria existente para reconocer reintentos sin añadir columnas ni índices. Las solicitudes repetidas con el mismo contenido responden `200`; reutilizar la clave con otros datos responde `409`. El nombre del escenario debe coincidir con `escenarios.nombre` y el formato de nivel es `Nivel N`.
+
+Los ejemplos para probar el contrato están en `PortalDocente/UnityApi.http`. En la escena `SampleScene`, el cliente usa la URL HTTPS del portal Render y el modo offline se desactiva; durante el desarrollo se puede habilitar explícitamente desde el Inspector.
 
 El dashboard, la búsqueda, la paginación y los perfiles consultan los registros de PostgreSQL. Los listados se filtran por cohortes activas asignadas al docente autenticado. Los estados vacíos reflejan que la consulta no encontró registros; no se sustituyen por datos ficticios.
 

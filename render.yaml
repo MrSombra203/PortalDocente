@@ -10,3 +10,5 @@ services:
     envVars:
       - key: DATABASE_URL
         sync: false
+      - key: Authentication__Jwt__SigningKey
+        sync: false

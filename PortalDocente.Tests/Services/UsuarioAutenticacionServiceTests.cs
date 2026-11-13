@@ -64,6 +64,33 @@ public class UsuarioAutenticacionServiceTests
     }
 
     [Fact]
+    public async Task AutenticarEstudianteAsync_AceptaEstudianteSinHabilitarElLoginMvc()
+    {
+        await using var db = CrearBaseDeDatos();
+        var (usuario, password) = CrearUsuario("estudiante-api@example.test", ClaimsPrincipalExtensions.RolEstudiante);
+        var estudiante = new Estudiante
+        {
+            Id = Guid.NewGuid(),
+            UsuarioId = usuario.Id,
+            CreadoEn = DateTimeOffset.UtcNow
+        };
+        usuario.Estudiante = estudiante;
+        db.Usuarios.Add(usuario);
+        db.Estudiantes.Add(estudiante);
+        await db.SaveChangesAsync();
+        var servicio = new UsuarioAutenticacionService(db);
+
+        var resultadoApi = await servicio.AutenticarEstudianteAsync(usuario.Correo, password);
+        var resultadoMvc = await servicio.AutenticarAsync(usuario.Correo, password);
+
+        Assert.NotNull(resultadoApi.Usuario);
+        Assert.Equal(estudiante.Id, resultadoApi.Usuario.EstudianteId);
+        Assert.Null(resultadoApi.Error);
+        Assert.Null(resultadoMvc.Usuario);
+        Assert.Equal("Los estudiantes no tienen acceso al Portal Docente.", resultadoMvc.Error);
+    }
+
+    [Fact]
     public async Task AutenticarAsync_RechazaCuentaConVariosRoles()
     {
         await using var db = CrearBaseDeDatos();

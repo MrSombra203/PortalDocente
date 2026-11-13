@@ -1,0 +1,36 @@
+@baseUrl = https://localhost:7246
+@token = reemplazar-por-el-token-recibido-en-el-login
+@studentId = 00000000-0000-0000-0000-000000000001
+@idempotencyKey = 11111111-1111-1111-1111-111111111111
+@partidaId = {{idempotencyKey}}
+
+### Login de un estudiante habilitado
+POST {{baseUrl}}/api/unity/login
+Content-Type: application/json
+
+{
+  "correo": "estudiante@example.edu",
+  "password": "reemplazar-en-la-prueba-local"
+}
+
+### Registrar resultado de una partida
+POST {{baseUrl}}/api/resultados/registrar
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "idEstudiante": "{{studentId}}",
+  "escenario": "Importación Marítima - Asia a GYE",
+  "nivel": "Nivel 1",
+  "fecha": "2026-11-13T20:00:00Z",
+  "puntajeGlobal": 91.5,
+  "entregasATiempo": 94,
+  "utilizacionRecursos": 90.5,
+  "eficienciaRutas": 89,
+  "costoTotal": 40800,
+  "idempotencyKey": "{{idempotencyKey}}"
+}
+
+### Consultar una partida del estudiante autenticado
+GET {{baseUrl}}/api/resultados/{{partidaId}}
+Authorization: Bearer {{token}}
