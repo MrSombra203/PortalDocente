@@ -12,6 +12,7 @@ using Xunit;
 
 namespace PortalDocente.Tests.Controllers;
 
+/// <summary>Comprueba el endpoint de exportación sin alterar registros y con protección de fórmulas CSV.</summary>
 public class EstudiantesControllerTests
 {
     [Fact]

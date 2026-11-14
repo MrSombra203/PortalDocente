@@ -1,5 +1,6 @@
 namespace PortalDocente.Data.Entities;
 
+/// <summary>Perfil académico del estudiante, con sus matrículas y partidas registradas.</summary>
 public class Estudiante
 {
     public Guid Id { get; set; }

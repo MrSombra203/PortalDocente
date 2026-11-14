@@ -1,5 +1,6 @@
 namespace PortalDocente.Data.Entities;
 
+/// <summary>Indicadores calculados para una partida y consultados en el progreso académico.</summary>
 public class Kpi
 {
     public Guid Id { get; set; }

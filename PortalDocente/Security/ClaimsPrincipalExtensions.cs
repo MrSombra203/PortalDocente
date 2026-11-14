@@ -2,6 +2,8 @@ using System.Security.Claims;
 
 namespace PortalDocente.Security;
 
+/// Centraliza los valores de rol del portal y extrae del principal autenticado
+/// el ID de docente que restringe las consultas académicas.
 public static class ClaimsPrincipalExtensions
 {
     public const string DocenteIdClaim = "docente_id";

@@ -4,6 +4,7 @@ using Xunit;
 
 namespace PortalDocente.Tests.Data;
 
+/// <summary>Verifica la conversión de URI Neon y el rechazo de formatos u opciones no admitidos.</summary>
 public class NeonDatabaseConnectionStringTests
 {
     [Fact]

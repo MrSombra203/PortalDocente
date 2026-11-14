@@ -13,6 +13,7 @@ using Xunit;
 
 namespace PortalDocente.Tests.Security;
 
+/// <summary>Comprueba los roles requeridos por los controladores y la revalidación de cookies.</summary>
 public class AutorizacionRolesTests
 {
     [Fact]

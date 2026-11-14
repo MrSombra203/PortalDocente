@@ -1,5 +1,6 @@
 namespace PortalDocente.Data.Entities;
 
+/// <summary>Rol de acceso reconocido por el portal, relacionado con las cuentas mediante UsuarioRol.</summary>
 public class Rol
 {
     public Guid Id { get; set; }

@@ -1,9 +1,11 @@
 import { defineConfig } from "@neon/config/v1";
 
+// Declara los servicios administrados de Neon asociados a este repositorio.
 export default defineConfig({
-  // Declare your Neon services here
+  // Auth se habilita en Neon, pero el portal conserva su autenticación local con cookies.
   auth: true,
   functions: {
+    // Endpoint mínimo usado por el chequeo de salud para verificar la función desplegada.
     hello: { name: "Hello World", source: "./hello.ts" },
   },
   // Branch policy: per-branch tuning

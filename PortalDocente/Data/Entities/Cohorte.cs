@@ -1,5 +1,7 @@
 namespace PortalDocente.Data.Entities;
 
+/// Grupo de un curso perteneciente a un docente; organiza matrículas y escenarios.
+/// Otros docentes pueden consultarlo mediante CohorteDocente sin cambiar la propiedad.
 public class Cohorte
 {
     public Guid Id { get; set; }

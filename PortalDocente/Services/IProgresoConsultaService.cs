@@ -2,6 +2,7 @@ using PortalDocente.Models.ViewModels;
 
 namespace PortalDocente.Services;
 
+/// Contrato de lectura para el dashboard, el listado de estudiantes y el detalle de progreso.
 public interface IProgresoConsultaService
 {
     Task<DashboardViewModel> ObtenerDashboardAsync(Guid docenteId, CancellationToken cancellationToken = default);

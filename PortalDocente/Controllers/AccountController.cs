@@ -10,6 +10,8 @@ using PortalDocente.Services;
 
 namespace PortalDocente.Controllers;
 
+/// Coordina el inicio y cierre de sesión; la verificación de credenciales vive en
+/// <see cref="IUsuarioAutenticacionService"/> y la sesión resultante se guarda en una cookie.
 public class AccountController : Controller
 {
     private readonly IUsuarioAutenticacionService _autenticacionService;
@@ -53,6 +55,8 @@ public class AccountController : Controller
             return View(model);
         }
 
+        // La cookie transporta identidad y rol; para docentes también incluye el ID de su perfil,
+        // que los controladores académicos necesitan para limitar las consultas.
         var claims = new List<Claim>
         {
             new(ClaimTypes.NameIdentifier, usuario.Id.ToString()),
@@ -76,6 +80,7 @@ public class AccountController : Controller
         if (usuario.Rol == ClaimsPrincipalExtensions.RolAdmin)
             return RedirectToAction("Index", "AdminUsuarios");
 
+        // Solo se permite regresar a rutas locales para no convertir el parámetro en una redirección externa.
         if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
             return Redirect(returnUrl);
 

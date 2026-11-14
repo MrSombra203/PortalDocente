@@ -1,3 +1,4 @@
+@* Convierte las puntuaciones recibidas en coordenadas SVG para reutilizar la gráfica en dashboard y perfil. *@
 @model IReadOnlyList<EvolucionPuntoViewModel>
 @{
     var valores = Model.Select(punto => punto.Puntuacion).ToList();

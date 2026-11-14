@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace PortalDocente.Models.ViewModels;
 
+/// <summary>Datos de cuenta y estado que se muestran en la lista de administración.</summary>
 public class UsuarioAdministracionItemViewModel
 {
     public Guid Id { get; set; }
@@ -11,6 +12,10 @@ public class UsuarioAdministracionItemViewModel
     public bool Activo { get; set; }
 }
 
+/// <summary>
+/// Datos enviados por los formularios para crear o editar una cuenta, su perfil y,
+/// si es docente, las cohortes adicionales que podrá consultar.
+/// </summary>
 public class UsuarioAdministracionEditViewModel
 {
     public Guid Id { get; set; }
@@ -50,6 +55,7 @@ public class UsuarioAdministracionEditViewModel
     public IReadOnlyList<CohorteAsignacionViewModel> CohortesDisponibles { get; set; } = [];
 }
 
+/// <summary>Información legible de una cohorte que puede compartirse con otro docente.</summary>
 public class CohorteAsignacionViewModel
 {
     public Guid Id { get; set; }

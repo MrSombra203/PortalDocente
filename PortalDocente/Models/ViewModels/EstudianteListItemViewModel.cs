@@ -1,5 +1,6 @@
 namespace PortalDocente.Models.ViewModels;
 
+/// <summary>Datos de una fila del listado de estudiantes visible para el docente.</summary>
 public class EstudianteListItemViewModel
 {
     public Guid Id { get; set; }
@@ -13,6 +14,7 @@ public class EstudianteListItemViewModel
     public decimal? UltimaPuntuacion { get; set; }
 }
 
+/// <summary>Resultados y estado de búsqueda y paginación de la pantalla de estudiantes.</summary>
 public class EstudiantesIndexViewModel
 {
     public string? Busqueda { get; set; }

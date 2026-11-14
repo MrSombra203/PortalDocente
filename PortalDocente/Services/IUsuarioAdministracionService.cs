@@ -2,6 +2,8 @@ using PortalDocente.Models.ViewModels;
 
 namespace PortalDocente.Services;
 
+/// Contrato de las operaciones administrativas sobre cuentas y cohortes compartidas.
+/// Los métodos devuelven un mensaje cuando una regla de negocio impide la operación.
 public interface IUsuarioAdministracionService
 {
     Task<IReadOnlyList<UsuarioAdministracionItemViewModel>> ListarAsync(

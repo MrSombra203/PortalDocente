@@ -4,6 +4,8 @@ using PortalDocente.Security;
 
 namespace PortalDocente.Services;
 
+/// Busca cuentas activas, verifica su rol y perfil, y compara la contraseña con el hash
+/// almacenado antes de devolver los datos mínimos para emitir la cookie de sesión.
 public sealed class UsuarioAutenticacionService : IUsuarioAutenticacionService
 {
     private const string ErrorCredenciales = "Credenciales incorrectas.";
@@ -40,6 +42,7 @@ public sealed class UsuarioAutenticacionService : IUsuarioAutenticacionService
             return (null, ErrorCredenciales);
         }
 
+        // BCrypt compara la contraseña ingresada con el hash; no se recupera ni se almacena texto plano.
         bool claveValida;
         try
         {

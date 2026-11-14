@@ -5,6 +5,8 @@ using PortalDocente.Data;
 
 namespace PortalDocente.Infrastructure.HealthChecks;
 
+/// Comprueba por separado PostgreSQL, el endpoint JWKS de Neon Auth y una función Neon;
+/// estos probes diagnostican servicios y no participan en el login del portal.
 public sealed class NeonServicesHealthService
 {
     private const string FunctionResponse = "Hello from Neon Functions";
@@ -28,6 +30,7 @@ public sealed class NeonServicesHealthService
     public async Task<IReadOnlyDictionary<string, string>> CheckAsync(
         CancellationToken cancellationToken)
     {
+        // Se informa cada dependencia por separado para que el endpoint identifique cuál falló.
         var results = new Dictionary<string, string>
         {
             ["postgres"] = await CheckPostgresAsync(cancellationToken),

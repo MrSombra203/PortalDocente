@@ -3,6 +3,8 @@ using PortalDocente.Data.Entities;
 
 namespace PortalDocente.Data;
 
+/// Mapea las entidades del portal a las tablas PostgreSQL y define sus claves,
+/// relaciones y filtros globales para partidas eliminadas.
 public class PortalDbContext : DbContext
 {
     public PortalDbContext(DbContextOptions<PortalDbContext> options) : base(options)
@@ -25,6 +27,7 @@ public class PortalDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        // Las tablas y columnas conservan los nombres en minúsculas del esquema existente.
         modelBuilder.Entity<Usuario>(e =>
         {
             e.ToTable("usuarios");
@@ -115,6 +118,7 @@ public class PortalDbContext : DbContext
 
         modelBuilder.Entity<CohorteDocente>(e =>
         {
+            // Esta tabla concede acceso adicional sin cambiar el docente propietario de la cohorte.
             e.ToTable("cohortes_docentes");
             e.HasKey(x => new { x.DocenteId, x.CohorteId });
             e.Property(x => x.DocenteId).HasColumnName("docente_id");
@@ -186,6 +190,7 @@ public class PortalDbContext : DbContext
             e.Property(x => x.Eliminado).HasColumnName("eliminado");
             e.HasOne(x => x.Estudiante).WithMany(x => x.Partidas).HasForeignKey(x => x.EstudianteId);
             e.HasOne(x => x.Nivel).WithMany(x => x.Partidas).HasForeignKey(x => x.NivelId);
+            // Los registros marcados como eliminados quedan fuera de las consultas normales.
             e.HasQueryFilter(x => !x.Eliminado);
         });
 

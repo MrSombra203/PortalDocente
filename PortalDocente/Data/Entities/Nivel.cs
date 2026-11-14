@@ -1,5 +1,6 @@
 namespace PortalDocente.Data.Entities;
 
+/// <summary>Nivel de un escenario; sus partidas registran el intento del estudiante.</summary>
 public class Nivel
 {
     public Guid Id { get; set; }

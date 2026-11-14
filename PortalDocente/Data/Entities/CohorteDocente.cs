@@ -1,5 +1,6 @@
 namespace PortalDocente.Data.Entities;
 
+/// Permiso explícito que permite a un docente adicional consultar una cohorte.
 public class CohorteDocente
 {
     public Guid DocenteId { get; set; }

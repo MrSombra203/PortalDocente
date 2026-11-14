@@ -10,8 +10,11 @@ using PortalDocente.Services;
 using PortalDocente.Infrastructure.Database;
 using PortalDocente.Infrastructure.HealthChecks;
 
+// Punto de composición de la aplicación: registra servicios, persistencia,
+// autenticación y las rutas que consumen las vistas y los chequeos de salud.
 var builder = WebApplication.CreateBuilder(args);
 
+// Los servicios de aplicación separan las consultas y reglas de negocio de los controladores MVC.
 builder.Services.AddControllersWithViews();
 builder.Services.AddHttpClient("NeonServicesHealth", client =>
     client.Timeout = TimeSpan.FromSeconds(10));
@@ -31,6 +34,7 @@ builder.Services.AddAntiforgery(options =>
 
 var environmentConnectionString = Environment.GetEnvironmentVariable("ConnectionStrings__PortalCentral");
 var databaseUrl = builder.Configuration["DATABASE_URL"];
+// En despliegue se acepta la URI de Neon; una cadena explícita de ConnectionStrings tiene prioridad.
 var connectionString = !string.IsNullOrWhiteSpace(environmentConnectionString)
     ? environmentConnectionString
     : !string.IsNullOrWhiteSpace(databaseUrl)
@@ -103,6 +107,8 @@ builder.Services.AddRateLimiter(options =>
 
 var app = builder.Build();
 
+// Una caída temporal de PostgreSQL no impide que la web arranque; las solicitudes que necesiten datos
+// seguirán dependiendo de la base y el chequeo de salud informará su disponibilidad.
 try
 {
     await using var scope = app.Services.CreateAsyncScope();
@@ -120,6 +126,7 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+// El orden autentica primero la cookie y aplica después la política que protege por defecto las rutas.
 app.UseExceptionHandler("/Home/Error");
 app.UseHttpsRedirection();
 app.Use(async (context, next) =>
@@ -149,6 +156,7 @@ app.MapControllers();
 app.MapGet("/health/live", () => Results.Ok(new { status = "ok" }))
     .AllowAnonymous();
 
+// Las vistas MVC usan Home/Index como ruta raíz; /health/live queda disponible sin iniciar sesión.
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}")

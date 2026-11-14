@@ -1,3 +1,4 @@
+# Render construye la imagen Docker y considera disponible el servicio cuando responde /health/live.
 services:
   - type: web
     name: portal-docente

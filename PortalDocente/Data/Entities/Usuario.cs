@@ -1,5 +1,6 @@
 namespace PortalDocente.Data.Entities;
 
+/// <summary>Cuenta de acceso del portal, vinculada opcionalmente a un perfil docente o estudiante.</summary>
 public class Usuario
 {
     public Guid Id { get; set; }

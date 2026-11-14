@@ -1,3 +1,4 @@
+/* Hoja común de las vistas Razor: tokens visuales, estructura, componentes y ajustes para pantallas pequeñas. */
 :root {
   color-scheme: light;
   --ink: #242426;
@@ -36,6 +37,7 @@ button, a, input { -webkit-tap-highlight-color: transparent; }
   outline-offset: 3px;
 }
 
+/* Estructura de la aplicación autenticada: navegación lateral, barra superior y contenido. */
 .app-shell { background: var(--canvas); }
 .sidebar {
   position: fixed;

@@ -1,5 +1,6 @@
 namespace PortalDocente.Data.Entities;
 
+/// Inscripción de un estudiante en una cohorte, con su estado y fecha de matrícula.</summ
 public class CursoEstudiante
 {
     public Guid Id { get; set; }

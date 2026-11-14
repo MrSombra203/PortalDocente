@@ -4,6 +4,8 @@ using PortalDocente.Infrastructure.HealthChecks;
 
 namespace PortalDocente.Controllers.Api;
 
+/// Reporta el estado agregado de PostgreSQL y de los servicios Neon configurados,
+/// sin exponer este diagnóstico a una sesión autenticada.
 [ApiController]
 [Route("health/neon")]
 [AllowAnonymous]

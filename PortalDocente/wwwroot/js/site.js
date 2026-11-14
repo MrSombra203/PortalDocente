@@ -1,7 +1,7 @@
-﻿// Please see documentation at https://learn.microsoft.com/aspnet/core/client-side/bundling-and-minification
-// for details on configuring this project to bundle and minify static web assets.
+﻿// Mejora la navegación y los envíos de las vistas MVC; las páginas siguen funcionando como formularios
+// y navegaciones normales cuando JavaScript no está disponible.
 
-// The dashboard remains usable without JavaScript; this only enhances mobile navigation.
+// En pantallas pequeñas abre la barra lateral y permite cerrarla con el botón, el fondo o Escape.
 (() => {
     const toggle = document.getElementById("sidebarToggle");
     const sidebar = document.getElementById("sidebar");
@@ -41,6 +41,7 @@
     });
 })();
 
+// Limpia el filtro y vuelve a enviar el formulario GET de búsqueda para mostrar el listado completo.
 (() => {
     document.addEventListener("click", (event) => {
         if (!(event.target instanceof Element)) return;
@@ -57,6 +58,7 @@
     });
 })();
 
+// Evita envíos repetidos, pide confirmación cuando corresponde y muestra el loader mientras navega.
 (() => {
     const loader = document.getElementById("pageLoader");
     const message = loader?.querySelector("[data-loading-message]");
@@ -173,5 +175,6 @@
         showLoader(link.dataset.loadingMessage || "Cargando información…");
     });
 
+    // pageshow también se dispara al volver desde la caché del navegador; restaura el formulario y el loader.
     window.addEventListener("pageshow", hideLoader);
 })();

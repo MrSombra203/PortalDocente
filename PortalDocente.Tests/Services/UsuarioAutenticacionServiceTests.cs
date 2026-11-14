@@ -9,6 +9,7 @@ using Xunit;
 
 namespace PortalDocente.Tests.Services;
 
+/// <summary>Prueba credenciales, reglas de rol y validaciones del modelo de login.</summary>
 public class UsuarioAutenticacionServiceTests
 {
     [Fact]

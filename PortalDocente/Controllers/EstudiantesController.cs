@@ -7,6 +7,8 @@ using PortalDocente.Services;
 
 namespace PortalDocente.Controllers;
 
+/// Presenta estudiantes y su historial al docente autenticado; cada consulta recibe
+/// el ID de docente de la cookie para volver a comprobar el alcance de los datos.
 [Authorize(Roles = ClaimsPrincipalExtensions.RolDocente)]
 public class EstudiantesController : Controller
 {
@@ -56,6 +58,8 @@ public class EstudiantesController : Controller
         if (model == null)
             return NotFound();
 
+        // El CSV incluye una fila informativa aunque aún no haya partidas, y una fila por
+        // partida cuando existe historial para el estudiante.
         var csv = new StringBuilder();
         AgregarFilaCsv(csv,
             "Estudiante", "Correo", "Código institucional", "Curso / cohorte",
@@ -115,6 +119,7 @@ public class EstudiantesController : Controller
     {
         valor ??= string.Empty;
         var primerCaracter = valor.FirstOrDefault(caracter => !char.IsWhiteSpace(caracter));
+        // Evita que una celda exportada se interprete como fórmula al abrir el archivo en una hoja de cálculo.
         if (protegerFormula && primerCaracter is '=' or '+' or '-' or '@' or '\t' or '\r')
             valor = "'" + valor;
 

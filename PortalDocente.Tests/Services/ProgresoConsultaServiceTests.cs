@@ -6,6 +6,7 @@ using Xunit;
 
 namespace PortalDocente.Tests.Services;
 
+/// <summary>Prueba paginación, acceso por cohortes propias o compartidas y métricas académicas.</summary>
 public class ProgresoConsultaServiceTests
 {
     [Fact]

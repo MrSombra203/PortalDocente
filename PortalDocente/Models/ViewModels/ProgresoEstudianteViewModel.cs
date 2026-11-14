@@ -1,5 +1,7 @@
 namespace PortalDocente.Models.ViewModels;
 
+/// Agrupa la identidad del estudiante, sus indicadores actuales y el historial de partidas
+/// que el docente está autorizado a consultar.
 public class ProgresoEstudianteViewModel
 {
     public Guid EstudianteId { get; set; }
@@ -29,6 +31,7 @@ public class ProgresoEstudianteViewModel
     public IReadOnlyList<EvolucionPuntoViewModel> Evolucion { get; set; } = Array.Empty<EvolucionPuntoViewModel>();
 }
 
+/// <summary>Una partida presentada en el historial del perfil de estudiante.</summary>
 public class PartidaHistorialItemViewModel
 {
     public Guid PartidaId { get; set; }
@@ -44,6 +47,7 @@ public class PartidaHistorialItemViewModel
     public decimal? PuntuacionGlobal { get; set; }
 }
 
+/// <summary>Punto de puntuación y etiqueta usados por la gráfica de evolución.</summary>
 public class EvolucionPuntoViewModel
 {
     public DateTimeOffset Fecha { get; set; }

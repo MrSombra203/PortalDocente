@@ -1,5 +1,6 @@
 namespace PortalDocente.Models.ViewModels;
 
+/// <summary>Indicadores y colecciones que alimentan el resumen principal del docente.</summary>
 public class DashboardViewModel
 {
     public int TotalEstudiantes { get; set; }
@@ -18,6 +19,7 @@ public class DashboardViewModel
         = Array.Empty<EvolucionPuntoViewModel>();
 }
 
+/// <summary>Resumen de la actividad reciente de un estudiante destacado en el dashboard.</summary>
 public class DashboardEstudianteDestacadoViewModel
 {
     public Guid Id { get; set; }
@@ -28,6 +30,7 @@ public class DashboardEstudianteDestacadoViewModel
     public string Iniciales { get; set; } = "?";
 }
 
+/// Elemento de la lista de actividad reciente del dashboard.
 public class DashboardActividadViewModel
 {
     public string Titulo { get; set; } = string.Empty;

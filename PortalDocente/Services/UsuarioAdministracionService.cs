@@ -8,6 +8,8 @@ using PortalDocente.Security;
 
 namespace PortalDocente.Services;
 
+/// Implementa el ciclo de vida de las cuentas: rol único, perfil opcional de docente
+/// o estudiante, credenciales con BCrypt y asignaciones explícitas de cohortes compartidas.
 public sealed class UsuarioAdministracionService : IUsuarioAdministracionService
 {
     private const string ErrorCorreoDuplicado = "Ya existe una cuenta con ese correo.";
@@ -148,6 +150,7 @@ public sealed class UsuarioAdministracionService : IUsuarioAdministracionService
             ActualizadoEn = ahora
         };
 
+        // La contraseña se conserva únicamente como hash; el perfil académico depende del rol elegido.
         usuario.Roles.Add(new UsuarioRol
         {
             UsuarioId = usuario.Id,
@@ -193,6 +196,7 @@ public sealed class UsuarioAdministracionService : IUsuarioAdministracionService
             ? await _db.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken)
             : null;
 
+        // El cambio de cuenta, perfil, rol y cohortes se agrupa para no dejar permisos parcialmente aplicados.
         var usuario = await _db.Usuarios
             .Include(item => item.Docente)
             .Include(item => item.Estudiante)
@@ -257,6 +261,7 @@ public sealed class UsuarioAdministracionService : IUsuarioAdministracionService
 
         _db.UsuariosRoles.RemoveRange(usuario.Roles);
         usuario.Roles.Clear();
+        // Primero se persiste la eliminación de la relación anterior para respetar la clave única del rol.
         await _db.SaveChangesAsync(cancellationToken);
 
         _db.UsuariosRoles.Add(new UsuarioRol
@@ -383,6 +388,8 @@ public sealed class UsuarioAdministracionService : IUsuarioAdministracionService
     private async Task SincronizarCohortesCompartidasAsync(
         Guid docenteId, IReadOnlyList<Guid> cohortesSeleccionadas, CancellationToken cancellationToken)
     {
+        // Se guarda la diferencia entre asignaciones actuales y selección nueva; la cohorte conserva
+        // su docente propietario y solo se agrega o retira el acceso compartido.
         var asignacionesActuales = await _db.CohortesDocentes
             .Where(asignacion => asignacion.DocenteId == docenteId)
             .ToListAsync(cancellationToken);
@@ -407,6 +414,7 @@ public sealed class UsuarioAdministracionService : IUsuarioAdministracionService
     private async Task<string?> ComprobarDependenciasAsync(
         Usuario usuario, CancellationToken cancellationToken)
     {
+        // No se borran perfiles con cohortes, matrículas o partidas relacionadas para preservar datos académicos.
         if (usuario.Docente != null
             && await _db.Cohortes.AnyAsync(cohorte => cohorte.DocenteId == usuario.Docente.Id, cancellationToken))
         {

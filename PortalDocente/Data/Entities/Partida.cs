@@ -1,5 +1,9 @@
 namespace PortalDocente.Data.Entities;
 
+/// <summary>
+/// Registro de una partida de un estudiante en un nivel, con estado de sincronización
+/// y eliminación lógica; puede tener un único conjunto de KPI.
+/// </summary>
 public class Partida
 {
     public Guid Id { get; set; }

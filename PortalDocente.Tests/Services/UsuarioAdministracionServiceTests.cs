@@ -8,6 +8,7 @@ using Xunit;
 
 namespace PortalDocente.Tests.Services;
 
+/// <summary>Prueba creación, edición, asignación de cohortes y protecciones del ciclo de vida de cuentas.</summary>
 public class UsuarioAdministracionServiceTests
 {
     [Fact]

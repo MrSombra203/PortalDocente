@@ -7,6 +7,7 @@ using PortalDocente.Services;
 
 namespace PortalDocente.Controllers;
 
+/// Sirve el resumen de progreso del docente y la vista de error genérica de la aplicación.
 [Authorize(Roles = ClaimsPrincipalExtensions.RolDocente)]
 public class HomeController : Controller
 {

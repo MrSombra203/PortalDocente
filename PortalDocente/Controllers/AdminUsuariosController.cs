@@ -7,6 +7,8 @@ using PortalDocente.Services;
 
 namespace PortalDocente.Controllers;
 
+/// Expone la gestión de cuentas solo a administradores y prepara los datos auxiliares
+/// que necesitan los formularios; las reglas de persistencia pertenecen al servicio.
 [Authorize(Roles = ClaimsPrincipalExtensions.RolAdmin)]
 [Route("Admin/Usuarios")]
 public class AdminUsuariosController : Controller
@@ -131,6 +133,7 @@ public class AdminUsuariosController : Controller
     private async Task PrepararCohortesAsync(
         UsuarioAdministracionEditViewModel modelo, Guid? usuarioId, CancellationToken cancellationToken)
     {
+        // El servicio excluye de la lista las cohortes que ya pertenecen al docente editado.
         modelo.CohortesDisponibles =
             await _usuariosService.CargarCohortesDisponiblesAsync(usuarioId, cancellationToken);
     }

@@ -1,5 +1,6 @@
 namespace PortalDocente.Data.Entities;
 
+/// <summary>Escenario académico asociado a una cohorte y organizado en niveles de juego.</summary>
 public class Escenario
 {
     public Guid Id { get; set; }

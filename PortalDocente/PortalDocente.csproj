@@ -1,5 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
+  <!-- Configura la aplicación ASP.NET Core y habilita referencias anulables e imports comunes. -->
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
@@ -7,6 +8,7 @@
     <UserSecretsId>portaldocente-udla-demo</UserSecretsId>
   </PropertyGroup>
 
+  <!-- Npgsql conecta Entity Framework con PostgreSQL; BCrypt protege las contraseñas almacenadas. -->
   <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.2.0" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />

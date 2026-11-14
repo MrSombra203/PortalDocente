@@ -5,6 +5,8 @@ using PortalDocente.Models.ViewModels;
 
 namespace PortalDocente.Services;
 
+/// Construye los datos de dashboard, listado y perfil a partir del esquema académico,
+/// aplicando en cada consulta el acceso del docente propietario y de quienes comparten cohorte.
 public class ProgresoConsultaService : IProgresoConsultaService
 {
     private readonly PortalDbContext _db;
@@ -14,6 +16,8 @@ public class ProgresoConsultaService : IProgresoConsultaService
         _db = db;
     }
 
+    // Un docente ve estudiantes matriculados activamente en sus cohortes propias o compartidas,
+    // además de estudiantes cuyas partidas estén asociadas a escenarios de esas cohortes.
     private static IQueryable<Estudiante> EstudiantesDelDocente(PortalDbContext db, Guid docenteId) =>
         db.Estudiantes
             .AsNoTracking()
@@ -29,6 +33,7 @@ public class ProgresoConsultaService : IProgresoConsultaService
                      db.CohortesDocentes.Any(cd =>
                          cd.CohorteId == p.Nivel.Escenario.CohorteId && cd.DocenteId == docenteId))));
 
+    // La misma regla acota el historial, incluso si una partida no coincide con la matrícula actual.
     private static IQueryable<Partida> PartidasDelDocente(PortalDbContext db, Guid docenteId) =>
         db.Partidas.Where(p =>
             p.Estudiante.Matriculas.Any(m =>
@@ -42,6 +47,7 @@ public class ProgresoConsultaService : IProgresoConsultaService
 
     public async Task<DashboardViewModel> ObtenerDashboardAsync(Guid docenteId, CancellationToken cancellationToken = default)
     {
+        // Las tarjetas se calculan sobre el conjunto visible; la lista de actividad se limita a registros recientes.
         var estudianteIds = EstudiantesDelDocente(_db, docenteId).Select(e => e.Id);
 
         var totalEstudiantes = await estudianteIds.CountAsync(cancellationToken);
@@ -156,6 +162,7 @@ public class ProgresoConsultaService : IProgresoConsultaService
         const int tamanioPagina = 25;
         var totalEstudiantes = await query.CountAsync(cancellationToken);
         var totalPaginas = Math.Max(1, (int)Math.Ceiling(totalEstudiantes / (double)tamanioPagina));
+        // Ajustar el índice evita pedir una página inexistente cuando cambia la búsqueda o el total de registros.
         pagina = Math.Clamp(pagina, 1, totalPaginas);
 
         var estudiantes = await query
@@ -286,6 +293,7 @@ public class ProgresoConsultaService : IProgresoConsultaService
         if (partidas.Count == 0)
             return vm;
 
+        // Las consultas anteriores ya filtraron la visibilidad; el resto agrega métricas solo para este alumno.
         var ultimaConNivel = partidas.First();
         vm.NivelAlcanzado = $"Nivel {ultimaConNivel.Nivel.Numero}";
         vm.EscenarioAlcanzado = ultimaConNivel.Nivel.Escenario.Nombre;

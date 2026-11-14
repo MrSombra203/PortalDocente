@@ -1,5 +1,6 @@
 namespace PortalDocente.Data.Entities;
 
+/// Curso dentro de un período académico, compuesto por una o más cohortes.
 public class Curso
 {
     public Guid Id { get; set; }

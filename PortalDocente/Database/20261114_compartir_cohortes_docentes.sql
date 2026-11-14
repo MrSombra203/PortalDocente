@@ -1,3 +1,5 @@
+-- Crea de forma idempotente la relación de acceso compartido; no cambia el docente propietario
+-- ni las matrículas, escenarios o partidas existentes.
 CREATE TABLE IF NOT EXISTS cohortes_docentes
 (
     docente_id uuid NOT NULL REFERENCES docentes (id) ON DELETE CASCADE,

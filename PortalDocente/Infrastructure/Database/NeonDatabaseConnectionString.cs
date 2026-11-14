@@ -2,6 +2,8 @@ using Npgsql;
 
 namespace PortalDocente.Infrastructure.Database;
 
+/// Convierte la URI PostgreSQL que entrega Neon en el formato que consume Npgsql,
+/// manteniendo TLS y los parámetros de conexión admitidos por la aplicación.
 public static class NeonDatabaseConnectionString
 {
     public static string FromDatabaseUrl(string databaseUrl)
@@ -34,6 +36,7 @@ public static class NeonDatabaseConnectionString
             SslMode = SslMode.Require
         };
 
+        // Solo se aceptan opciones conocidas para evitar ignorar silenciosamente una configuración de conexión.
         foreach (var parameter in uri.Query.TrimStart('?').Split('&', StringSplitOptions.RemoveEmptyEntries))
         {
             var pair = parameter.Split('=', 2);

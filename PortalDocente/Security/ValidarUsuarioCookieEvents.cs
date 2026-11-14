@@ -6,6 +6,8 @@ using PortalDocente.Data;
 
 namespace PortalDocente.Security;
 
+/// Revalida la cuenta y su rol desde la base en cada solicitud autenticada,
+/// actualizando o revocando la cookie cuando el estado cambió desde el login.
 public sealed class ValidarUsuarioCookieEvents : CookieAuthenticationEvents
 {
     private readonly PortalDbContext _db;
@@ -62,6 +64,7 @@ public sealed class ValidarUsuarioCookieEvents : CookieAuthenticationEvents
             return;
         }
 
+        // Si cambió el nombre, correo, rol o perfil docente, se renuevan los claims con los datos actuales.
         var claims = new List<Claim>
         {
             new(ClaimTypes.NameIdentifier, usuario.Id.ToString()),

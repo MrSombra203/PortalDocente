@@ -1,3 +1,4 @@
+@* Parcial compartido para alta y edición: campos, rol, estado y cohortes disponibles del docente. *@
 @model UsuarioAdministracionEditViewModel
 @{
     var esCreacion = ViewData["EsCreacion"] is true;
@@ -89,6 +90,7 @@
     </form>
 </section>
 
+@* El script solo oculta o muestra cohortes según el rol; la validación real ocurre en el servidor. *@
 <script>
     (() => {
         const rol = document.getElementById("Rol");

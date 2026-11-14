@@ -1,5 +1,6 @@
 namespace PortalDocente.Data.Entities;
 
+/// <summary>Relación entre una cuenta y su rol; el portal requiere exactamente un rol por usuario.</summary>
 public class UsuarioRol
 {
     public Guid UsuarioId { get; set; }
