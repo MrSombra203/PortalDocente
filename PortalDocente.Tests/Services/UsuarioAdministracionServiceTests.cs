@@ -33,6 +33,43 @@ public class UsuarioAdministracionServiceTests
     }
 
     [Fact]
+    public async Task CrearAsync_AsignaCohorteCompartidaSinCambiarAlDocenteTitular()
+    {
+        await using var db = CrearBaseDeDatos();
+        await ProgresoConsultaTestData.SeedAsync(db, 0);
+        db.Roles.AddRange(
+            new Rol { Id = Guid.NewGuid(), Nombre = ClaimsPrincipalExtensions.RolAdmin, CreadoEn = DateTimeOffset.UtcNow },
+            new Rol { Id = Guid.NewGuid(), Nombre = ClaimsPrincipalExtensions.RolEstudiante, CreadoEn = DateTimeOffset.UtcNow });
+        await db.SaveChangesAsync();
+
+        var titularId = (await db.Cohortes.SingleAsync()).DocenteId;
+        var cohorteId = (await db.Cohortes.SingleAsync()).Id;
+        var modelo = CrearModelo(ClaimsPrincipalExtensions.RolDocente);
+        modelo.CohortesAsignadasIds = [cohorteId, cohorteId];
+        var servicio = new UsuarioAdministracionService(db);
+
+        var error = await servicio.CrearAsync(modelo);
+        var docenteCreado = await db.Docentes
+            .Include(docente => docente.CohortesAsignadas)
+            .SingleAsync(docente => docente.Usuario.Correo == modelo.Correo.ToLowerInvariant());
+
+        Assert.Null(error);
+        Assert.Single(docenteCreado.CohortesAsignadas);
+        Assert.Equal(cohorteId, docenteCreado.CohortesAsignadas.Single().CohorteId);
+        Assert.Equal(titularId, (await db.Cohortes.SingleAsync()).DocenteId);
+
+        db.ChangeTracker.Clear();
+        var edicion = await servicio.ObtenerAsync(docenteCreado.UsuarioId);
+        Assert.NotNull(edicion);
+        Assert.Equal([cohorteId], edicion!.CohortesAsignadasIds);
+        edicion.CohortesAsignadasIds = [];
+
+        Assert.Null(await servicio.ActualizarAsync(edicion));
+        Assert.Empty(await db.DocentesCohortes.ToListAsync());
+        Assert.Equal(titularId, (await db.Cohortes.SingleAsync()).DocenteId);
+    }
+
+    [Fact]
     public async Task ActualizarAsync_CambiaRolYReemplazaElPerfilSinAsignarRolesMultiples()
     {
         await using var db = CrearBaseDeDatos();

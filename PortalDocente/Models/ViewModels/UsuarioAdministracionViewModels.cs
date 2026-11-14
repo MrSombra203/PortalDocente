@@ -45,4 +45,17 @@ public class UsuarioAdministracionEditViewModel
     [StringLength(100, ErrorMessage = "El título no puede superar los 100 caracteres.")]
     [Display(Name = "Título académico")]
     public string? TituloAcademico { get; set; }
+
+    public List<Guid> CohortesAsignadasIds { get; set; } = [];
+}
+
+public class CohorteAsignacionItemViewModel
+{
+    public Guid Id { get; set; }
+    public string Curso { get; set; } = string.Empty;
+    public string PeriodoAcademico { get; set; } = string.Empty;
+    public string Nombre { get; set; } = string.Empty;
+    public string DocenteTitular { get; set; } = string.Empty;
+    public bool EsPropia { get; set; }
+    public bool Asignada { get; set; }
 }

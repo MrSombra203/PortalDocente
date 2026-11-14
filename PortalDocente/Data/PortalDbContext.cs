@@ -14,6 +14,7 @@ public class PortalDbContext : DbContext
     public DbSet<UsuarioRol> UsuariosRoles => Set<UsuarioRol>();
     public DbSet<Estudiante> Estudiantes => Set<Estudiante>();
     public DbSet<Docente> Docentes => Set<Docente>();
+    public DbSet<DocenteCohorte> DocentesCohortes => Set<DocenteCohorte>();
     public DbSet<Curso> Cursos => Set<Curso>();
     public DbSet<Cohorte> Cohortes => Set<Cohorte>();
     public DbSet<CursoEstudiante> CursosEstudiantes => Set<CursoEstudiante>();
@@ -110,6 +111,25 @@ public class PortalDbContext : DbContext
             e.Property(x => x.CreadoEn).HasColumnName("creado_en");
             e.HasOne(x => x.Curso).WithMany(x => x.Cohortes).HasForeignKey(x => x.CursoId);
             e.HasOne(x => x.Docente).WithMany().HasForeignKey(x => x.DocenteId);
+        });
+
+        modelBuilder.Entity<DocenteCohorte>(e =>
+        {
+            e.ToTable("docentes_cohortes");
+            e.HasKey(x => new { x.DocenteId, x.CohorteId });
+            e.Property(x => x.DocenteId).HasColumnName("docente_id");
+            e.Property(x => x.CohorteId).HasColumnName("cohorte_id");
+            e.Property(x => x.AsignadoEn).HasColumnName("asignado_en");
+            e.HasOne(x => x.Docente)
+                .WithMany(x => x.CohortesAsignadas)
+                .HasForeignKey(x => x.DocenteId)
+                .OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.Cohorte)
+                .WithMany(x => x.DocentesAsignados)
+                .HasForeignKey(x => x.CohorteId)
+                .OnDelete(DeleteBehavior.Restrict);
+            e.HasIndex(x => x.CohorteId)
+                .HasDatabaseName("ix_docentes_cohortes_cohorte_id");
         });
 
         modelBuilder.Entity<CursoEstudiante>(e =>

@@ -103,6 +103,114 @@ public class ProgresoConsultaServiceTests
     }
 
     [Fact]
+    public async Task ConsultasDeDocente_IncluyenCohortesCompartidasYSenalanCuandoNoHayAsignaciones()
+    {
+        await using var db = CrearBaseDeDatos();
+        await ProgresoConsultaTestData.SeedAsync(db, 1);
+
+        var cohort = await db.Cohortes.SingleAsync();
+        var student = await db.Estudiantes.SingleAsync();
+        var now = DateTimeOffset.UtcNow;
+        var scenario = new Escenario
+        {
+            Id = Guid.NewGuid(),
+            CohorteId = cohort.Id,
+            Nombre = "Escenario compartido",
+            Activo = true,
+            CreadoEn = now,
+            ActualizadoEn = now
+        };
+        var level = new Nivel
+        {
+            Id = Guid.NewGuid(),
+            EscenarioId = scenario.Id,
+            Numero = 1
+        };
+        var game = new Partida
+        {
+            Id = Guid.NewGuid(),
+            EstudianteId = student.Id,
+            NivelId = level.Id,
+            FechaCreacion = now,
+            FechaRecepcion = now,
+            Finalizada = true
+        };
+        var user = new Usuario
+        {
+            Id = Guid.NewGuid(),
+            Correo = "docente-compartido@example.test",
+            PasswordHash = "hash de prueba",
+            NombreCompleto = "Docente compartido",
+            Activo = true,
+            CreadoEn = now,
+            ActualizadoEn = now
+        };
+        var assignedTeacher = new Docente
+        {
+            Id = Guid.NewGuid(),
+            UsuarioId = user.Id,
+            Usuario = user,
+            CreadoEn = now
+        };
+
+        db.Usuarios.Add(user);
+        db.Docentes.Add(assignedTeacher);
+        db.Escenarios.Add(scenario);
+        db.Niveles.Add(level);
+        db.Partidas.Add(game);
+        db.Kpis.Add(new Kpi
+        {
+            Id = Guid.NewGuid(),
+            PartidaId = game.Id,
+            PuntuacionGlobal = 88,
+            FechaCreacion = now
+        });
+        await db.SaveChangesAsync();
+
+        var service = new ProgresoConsultaService(db);
+        var dashboardWithoutAssignment = await service.ObtenerDashboardAsync(assignedTeacher.Id);
+        var studentsWithoutAssignment = await service.ListarEstudiantesAsync(assignedTeacher.Id, null);
+
+        Assert.False(dashboardWithoutAssignment.TieneCohortesAsignadas);
+        Assert.Equal(0, dashboardWithoutAssignment.TotalEstudiantes);
+        Assert.Equal(0, dashboardWithoutAssignment.TotalPartidas);
+        Assert.False(studentsWithoutAssignment.TieneCohortesAsignadas);
+        Assert.Empty(studentsWithoutAssignment.Estudiantes);
+
+        db.DocentesCohortes.Add(new DocenteCohorte
+        {
+            DocenteId = assignedTeacher.Id,
+            CohorteId = cohort.Id,
+            AsignadoEn = now
+        });
+        await db.SaveChangesAsync();
+
+        var dashboard = await service.ObtenerDashboardAsync(assignedTeacher.Id);
+        var students = await service.ListarEstudiantesAsync(assignedTeacher.Id, null);
+        var studentProgress = await service.ObtenerProgresoAsync(assignedTeacher.Id, student.Id);
+        var ownerDashboard = await service.ObtenerDashboardAsync(ProgresoConsultaTestData.DocenteId);
+
+        Assert.True(dashboard.TieneCohortesAsignadas);
+        Assert.Equal(1, dashboard.TotalEstudiantes);
+        Assert.Equal(1, dashboard.EstudiantesConProgreso);
+        Assert.Equal(1, dashboard.TotalPartidas);
+        Assert.Equal(1, dashboard.PartidasFinalizadas);
+        Assert.Equal(88, dashboard.PromedioPuntuacionReciente);
+        Assert.Single(dashboard.ActividadReciente);
+        Assert.Single(students.Estudiantes);
+        Assert.Equal(1, students.TotalEstudiantes);
+        Assert.Equal(1, students.Estudiantes[0].PartidasRegistradas);
+        Assert.Equal(88, students.Estudiantes[0].UltimaPuntuacion);
+        Assert.NotNull(studentProgress);
+        Assert.Equal(1, studentProgress.TotalPartidas);
+        Assert.Equal(88, studentProgress.UltimaPuntuacionGlobal);
+        Assert.Equal(1, ownerDashboard.TotalEstudiantes);
+        Assert.Equal(1, ownerDashboard.TotalPartidas);
+        Assert.Single(await db.CursosEstudiantes.ToListAsync());
+        Assert.Single(await db.Partidas.ToListAsync());
+    }
+
+    [Fact]
     public async Task ConsultasDeDocente_IncluyenPartidasDeEstudiantesSinMatriculaSoloEnSusCohortes()
     {
         await using var db = CrearBaseDeDatos();

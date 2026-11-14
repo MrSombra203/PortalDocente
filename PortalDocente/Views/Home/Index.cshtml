@@ -13,6 +13,14 @@
        asp-controller="Estudiantes" asp-action="Index">Ver estudiantes <span aria-hidden="true">→</span></a>
 </section>
 
+@if (!Model.TieneCohortesAsignadas)
+{
+    <div class="assignment-notice" role="status">
+        <strong>No tienes cohortes asignadas.</strong>
+        <span>Solicita al administrador que te asigne una cohorte para consultar sus estudiantes y resultados.</span>
+    </div>
+}
+
 <section class="metric-grid" aria-label="Indicadores del curso">
     <article class="metric-card">
         <div class="metric-icon icon-brand" aria-hidden="true">◎</div>

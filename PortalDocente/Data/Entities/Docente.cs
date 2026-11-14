@@ -8,4 +8,5 @@ public class Docente
     public DateTimeOffset CreadoEn { get; set; }
 
     public Usuario Usuario { get; set; } = null!;
+    public ICollection<DocenteCohorte> CohortesAsignadas { get; set; } = new List<DocenteCohorte>();
 }

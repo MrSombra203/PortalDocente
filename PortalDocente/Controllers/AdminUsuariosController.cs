@@ -26,13 +26,14 @@ public class AdminUsuariosController : Controller
     }
 
     [HttpGet("Crear")]
-    public IActionResult Crear()
+    public async Task<IActionResult> Crear(CancellationToken cancellationToken)
     {
-        PrepararRoles();
-        return View(new UsuarioAdministracionEditViewModel
+        var modelo = new UsuarioAdministracionEditViewModel
         {
             Rol = ClaimsPrincipalExtensions.RolDocente
-        });
+        };
+        await PrepararVistaAsync(null, cancellationToken);
+        return View(modelo);
     }
 
     [HttpPost("Crear")]
@@ -42,7 +43,7 @@ public class AdminUsuariosController : Controller
     {
         if (!ModelState.IsValid)
         {
-            PrepararRoles();
+            await PrepararVistaAsync(null, cancellationToken);
             return View(modelo);
         }
 
@@ -50,7 +51,7 @@ public class AdminUsuariosController : Controller
         if (error != null)
         {
             ModelState.AddModelError(string.Empty, error);
-            PrepararRoles();
+            await PrepararVistaAsync(null, cancellationToken);
             return View(modelo);
         }
 
@@ -65,7 +66,7 @@ public class AdminUsuariosController : Controller
         if (modelo == null)
             return NotFound();
 
-        PrepararRoles();
+        await PrepararVistaAsync(id, cancellationToken);
         return View(modelo);
     }
 
@@ -79,7 +80,7 @@ public class AdminUsuariosController : Controller
 
         if (!ModelState.IsValid)
         {
-            PrepararRoles();
+            await PrepararVistaAsync(modelo.Id, cancellationToken);
             return View(modelo);
         }
 
@@ -87,7 +88,7 @@ public class AdminUsuariosController : Controller
         if (error != null)
         {
             ModelState.AddModelError(string.Empty, error);
-            PrepararRoles();
+            await PrepararVistaAsync(modelo.Id, cancellationToken);
             return View(modelo);
         }
 
@@ -111,7 +112,7 @@ public class AdminUsuariosController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    private void PrepararRoles()
+    private async Task PrepararVistaAsync(Guid? usuarioId, CancellationToken cancellationToken)
     {
         ViewBag.Roles = new[]
         {
@@ -119,5 +120,6 @@ public class AdminUsuariosController : Controller
             new SelectListItem("Docente", ClaimsPrincipalExtensions.RolDocente),
             new SelectListItem("Estudiante", ClaimsPrincipalExtensions.RolEstudiante)
         };
+        ViewBag.Cohortes = await _usuariosService.ListarCohortesAsync(usuarioId, cancellationToken);
     }
 }

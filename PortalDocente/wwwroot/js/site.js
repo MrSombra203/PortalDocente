@@ -58,6 +58,24 @@
 })();
 
 (() => {
+    const role = document.getElementById("Rol");
+    const assignment = document.querySelector("[data-cohort-assignment]");
+    if (!(role instanceof HTMLSelectElement) || !(assignment instanceof HTMLFieldSetElement)) return;
+
+    const updateAssignmentVisibility = () => {
+        const docenteSeleccionado = role.value === "docente";
+        assignment.hidden = !docenteSeleccionado;
+        assignment.querySelectorAll('input[type="checkbox"][data-owner="false"]')
+            .forEach((input) => {
+                if (input instanceof HTMLInputElement) input.disabled = !docenteSeleccionado;
+            });
+    };
+
+    role.addEventListener("change", updateAssignmentVisibility);
+    updateAssignmentVisibility();
+})();
+
+(() => {
     const loader = document.getElementById("pageLoader");
     const message = loader?.querySelector("[data-loading-message]");
     const announcement = loader?.querySelector("[data-loading-announcement]");

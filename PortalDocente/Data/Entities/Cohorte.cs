@@ -12,4 +12,5 @@ public class Cohorte
     public Docente Docente { get; set; } = null!;
     public ICollection<CursoEstudiante> Matriculas { get; set; } = new List<CursoEstudiante>();
     public ICollection<Escenario> Escenarios { get; set; } = new List<Escenario>();
+    public ICollection<DocenteCohorte> DocentesAsignados { get; set; } = new List<DocenteCohorte>();
 }

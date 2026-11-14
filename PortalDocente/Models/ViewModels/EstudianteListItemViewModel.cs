@@ -16,6 +16,7 @@ public class EstudianteListItemViewModel
 public class EstudiantesIndexViewModel
 {
     public string? Busqueda { get; set; }
+    public bool TieneCohortesAsignadas { get; set; }
     public int TotalEstudiantes { get; set; }
     public int PaginaActual { get; set; } = 1;
     public int TotalPaginas { get; set; } = 1;

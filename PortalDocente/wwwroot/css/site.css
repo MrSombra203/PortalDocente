@@ -642,6 +642,18 @@ h2 { margin-bottom: 3px; font-size: 16px; font-weight: 700; letter-spacing: -.01
 .admin-form-panel { max-width: 860px; }
 .admin-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 20px; }
 .field-hint { color: var(--muted); font-size: 12px; }
+.assignment-notice { display: flex; flex-wrap: wrap; gap: 4px 8px; margin-bottom: 16px; padding: 12px 15px; border: 1px solid #d6e0ea; border-radius: 9px; color: #35485c; background: #f3f7fa; font-size: 13px; }
+.cohort-assignment { grid-column: 1 / -1; min-width: 0; margin: 0; padding: 16px; border: 1px solid var(--line); border-radius: 10px; }
+.cohort-assignment legend { padding: 0 6px; color: var(--ink); font-size: 13px; font-weight: 700; }
+.cohort-assignment > .field-hint { margin: 0 0 12px; }
+.cohort-assignment-empty { margin: 0; color: var(--muted); font-size: 12px; }
+.cohort-assignment-list { display: grid; gap: 8px; }
+.cohort-assignment-option { display: flex; align-items: flex-start; gap: 10px; padding: 10px; border: 1px solid var(--line); border-radius: 8px; cursor: pointer; }
+.cohort-assignment-option input { flex: 0 0 auto; width: 16px; height: 16px; margin-top: 2px; accent-color: var(--brand); }
+.cohort-assignment-option > span:first-of-type { display: grid; gap: 3px; min-width: 0; }
+.cohort-assignment-option strong { color: var(--ink); font-size: 12px; }
+.cohort-assignment-option small { color: var(--muted); font-size: 11px; }
+.cohort-owner-label { margin-left: auto; color: var(--muted); font-size: 11px; font-weight: 650; }
 .student-search-label { color: var(--ink); font-size: 12px; font-weight: 650; }
 .admin-active-option { display: inline-flex; align-items: center; gap: 9px; color: var(--ink); font-size: 12px; }
 .admin-active-option input { width: 16px; height: 16px; accent-color: var(--brand); }

@@ -54,6 +54,44 @@
                 <input asp-for="Activo" />
                 <span>Cuenta activa</span>
             </label>
+            @{
+                var cohortes = ViewBag.Cohortes as IReadOnlyList<CohorteAsignacionItemViewModel>
+                    ?? Array.Empty<CohorteAsignacionItemViewModel>();
+            }
+            <fieldset class="cohort-assignment" data-cohort-assignment
+                      hidden="@(Model.Rol == ClaimsPrincipalExtensions.RolDocente ? null : "hidden")">
+                <legend>Cohortes a las que puede acceder</legend>
+                <p class="field-hint">Solo se aplica a cuentas docente. La asignación agrega acceso y conserva el del docente titular.</p>
+                @if (cohortes.Count == 0)
+                {
+                    <p class="cohort-assignment-empty">Todavía no existen cohortes para asignar.</p>
+                }
+                else
+                {
+                    <div class="cohort-assignment-list">
+                        @foreach (var cohorte in cohortes)
+                        {
+                            var seleccionada = cohorte.EsPropia
+                                || cohorte.Asignada
+                                || Model.CohortesAsignadasIds.Contains(cohorte.Id);
+                            <label class="cohort-assignment-option">
+                                <input type="checkbox" name="CohortesAsignadasIds" value="@cohorte.Id"
+                                       checked="@(seleccionada ? "checked" : null)"
+                                       disabled="@(cohorte.EsPropia ? "disabled" : null)"
+                                       data-owner="@(cohorte.EsPropia ? "true" : "false")" />
+                                <span>
+                                    <strong>@cohorte.Curso · @cohorte.Nombre</strong>
+                                    <small>Periodo @cohorte.PeriodoAcademico · Docente titular: @cohorte.DocenteTitular</small>
+                                </span>
+                                @if (cohorte.EsPropia)
+                                {
+                                    <span class="cohort-owner-label">Titular</span>
+                                }
+                            </label>
+                        }
+                    </div>
+                }
+            </fieldset>
         </div>
 
         <div class="admin-form-actions">

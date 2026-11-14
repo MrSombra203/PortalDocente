@@ -54,8 +54,16 @@
             }
             else
             {
-                <strong>Aún no hay estudiantes en tus cohortes.</strong>
-                <p>Cuando se registren estudiantes, su progreso aparecerá aquí.</p>
+                @if (!Model.TieneCohortesAsignadas)
+                {
+                    <strong>No tienes cohortes asignadas.</strong>
+                    <p>Solicita al administrador que te asigne una cohorte para consultar a sus estudiantes.</p>
+                }
+                else
+                {
+                    <strong>Aún no hay estudiantes en tus cohortes.</strong>
+                    <p>Cuando se registren estudiantes, su progreso aparecerá aquí.</p>
+                }
             }
         </div>
     }

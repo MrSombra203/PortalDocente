@@ -16,6 +16,7 @@ public sealed class UsuarioAdministracionService : IUsuarioAdministracionService
     private const string ErrorDependencias = "No se puede eliminar esta cuenta porque tiene información académica relacionada.";
     private const string ErrorUltimoAdmin = "No se puede quitar la cuenta ni el rol del último administrador activo.";
     private const string ErrorAutoBorrado = "No puedes eliminar tu propia cuenta mientras tienes la sesión iniciada.";
+    private const string ErrorCohortesInvalidas = "Una o más cohortes seleccionadas no existen o ya pertenecen a este docente.";
 
     private readonly PortalDbContext _db;
 
@@ -50,6 +51,7 @@ public sealed class UsuarioAdministracionService : IUsuarioAdministracionService
         var usuario = await _db.Usuarios
             .AsNoTracking()
             .Include(item => item.Docente)
+                .ThenInclude(docente => docente!.CohortesAsignadas)
             .Include(item => item.Estudiante)
             .Include(item => item.Roles)
                 .ThenInclude(usuarioRol => usuarioRol.Rol)
@@ -66,8 +68,39 @@ public sealed class UsuarioAdministracionService : IUsuarioAdministracionService
             Rol = usuario.Roles.Count == 1 ? usuario.Roles.Single().Rol.Nombre : string.Empty,
             Activo = usuario.Activo,
             CodigoInstitucional = usuario.Estudiante?.CodigoInstitucional,
-            TituloAcademico = usuario.Docente?.TituloAcademico
+            TituloAcademico = usuario.Docente?.TituloAcademico,
+            CohortesAsignadasIds = usuario.Docente?.CohortesAsignadas
+                .Select(asignacion => asignacion.CohorteId)
+                .ToList() ?? []
         };
+    }
+
+    public async Task<IReadOnlyList<CohorteAsignacionItemViewModel>> ListarCohortesAsync(
+        Guid? usuarioId, CancellationToken cancellationToken = default)
+    {
+        var docenteId = usuarioId.HasValue
+            ? await _db.Docentes
+                .Where(docente => docente.UsuarioId == usuarioId.Value)
+                .Select(docente => docente.Id)
+                .SingleOrDefaultAsync(cancellationToken)
+            : Guid.Empty;
+
+        return await _db.Cohortes
+            .AsNoTracking()
+            .OrderBy(cohorte => cohorte.Curso.Nombre)
+            .ThenBy(cohorte => cohorte.Nombre)
+            .Select(cohorte => new CohorteAsignacionItemViewModel
+            {
+                Id = cohorte.Id,
+                Curso = cohorte.Curso.Nombre,
+                PeriodoAcademico = cohorte.Curso.PeriodoAcademico,
+                Nombre = cohorte.Nombre,
+                DocenteTitular = cohorte.Docente.Usuario.NombreCompleto,
+                EsPropia = docenteId != Guid.Empty && cohorte.DocenteId == docenteId,
+                Asignada = docenteId != Guid.Empty &&
+                           cohorte.DocentesAsignados.Any(asignacion => asignacion.DocenteId == docenteId)
+            })
+            .ToListAsync(cancellationToken);
     }
 
     public async Task<string?> CrearAsync(
@@ -104,6 +137,14 @@ public sealed class UsuarioAdministracionService : IUsuarioAdministracionService
             Rol = rol.Rol
         });
         CrearPerfil(usuario, modelo, modelo.Rol, ahora);
+        if (modelo.Rol == ClaimsPrincipalExtensions.RolDocente)
+        {
+            var errorCohortes = await SincronizarCohortesAsignadasAsync(
+                usuario.Docente!, modelo.CohortesAsignadasIds, cancellationToken);
+            if (errorCohortes != null)
+                return errorCohortes;
+        }
+
         _db.Usuarios.Add(usuario);
 
         try
@@ -165,6 +206,14 @@ public sealed class UsuarioAdministracionService : IUsuarioAdministracionService
         var errorPerfil = SincronizarPerfil(usuario, modelo);
         if (errorPerfil != null)
             return errorPerfil;
+
+        if (modelo.Rol == ClaimsPrincipalExtensions.RolDocente)
+        {
+            var errorCohortes = await SincronizarCohortesAsignadasAsync(
+                usuario.Docente!, modelo.CohortesAsignadasIds, cancellationToken);
+            if (errorCohortes != null)
+                return errorCohortes;
+        }
 
         usuario.Correo = correo;
         usuario.NombreCompleto = modelo.NombreCompleto.Trim();
@@ -284,7 +333,10 @@ public sealed class UsuarioAdministracionService : IUsuarioAdministracionService
         Usuario usuario, CancellationToken cancellationToken)
     {
         if (usuario.Docente != null
-            && await _db.Cohortes.AnyAsync(cohorte => cohorte.DocenteId == usuario.Docente.Id, cancellationToken))
+            && (await _db.Cohortes.AnyAsync(
+                    cohorte => cohorte.DocenteId == usuario.Docente.Id, cancellationToken)
+                || await _db.DocentesCohortes.AnyAsync(
+                    asignacion => asignacion.DocenteId == usuario.Docente.Id, cancellationToken)))
         {
             return ErrorDependencias;
         }
@@ -298,6 +350,41 @@ public sealed class UsuarioAdministracionService : IUsuarioAdministracionService
             .IgnoreQueryFilters()
             .AnyAsync(partida => partida.EstudianteId == usuario.Estudiante.Id, cancellationToken);
         return tieneMatriculas || tienePartidas ? ErrorDependencias : null;
+    }
+
+    private async Task<string?> SincronizarCohortesAsignadasAsync(
+        Docente docente,
+        IEnumerable<Guid> cohortesSolicitadas,
+        CancellationToken cancellationToken)
+    {
+        var cohortesIds = cohortesSolicitadas.Distinct().ToArray();
+        var cohortesValidas = await _db.Cohortes
+            .Where(cohorte => cohortesIds.Contains(cohorte.Id) && cohorte.DocenteId != docente.Id)
+            .Select(cohorte => cohorte.Id)
+            .ToListAsync(cancellationToken);
+        if (cohortesValidas.Count != cohortesIds.Length)
+            return ErrorCohortesInvalidas;
+
+        var asignacionesActuales = await _db.DocentesCohortes
+            .Where(asignacion => asignacion.DocenteId == docente.Id)
+            .ToListAsync(cancellationToken);
+        var actualesIds = asignacionesActuales
+            .Select(asignacion => asignacion.CohorteId)
+            .ToHashSet();
+        var solicitadasSet = cohortesIds.ToHashSet();
+
+        _db.DocentesCohortes.RemoveRange(
+            asignacionesActuales.Where(asignacion => !solicitadasSet.Contains(asignacion.CohorteId)));
+        _db.DocentesCohortes.AddRange(cohortesIds
+            .Where(cohorteId => !actualesIds.Contains(cohorteId))
+            .Select(cohorteId => new DocenteCohorte
+            {
+                DocenteId = docente.Id,
+                CohorteId = cohorteId,
+                AsignadoEn = DateTimeOffset.UtcNow
+            }));
+
+        return null;
     }
 
     private async Task<bool> CorreoExisteAsync(

@@ -2,6 +2,7 @@ namespace PortalDocente.Models.ViewModels;
 
 public class DashboardViewModel
 {
+    public bool TieneCohortesAsignadas { get; set; }
     public int TotalEstudiantes { get; set; }
     public int EstudiantesConProgreso { get; set; }
     public int EstudiantesSinProgreso { get; set; }
