@@ -103,6 +103,153 @@ public class ProgresoConsultaServiceTests
     }
 
     [Fact]
+    public async Task ConsultasDeDocente_IncluyenPartidasDeEstudiantesSinMatriculaSoloEnSusCohortes()
+    {
+        await using var db = CrearBaseDeDatos();
+        await ProgresoConsultaTestData.SeedAsync(db, 1);
+
+        var fecha = DateTimeOffset.UtcNow;
+        var cohorteDocente = await db.Cohortes.SingleAsync();
+        var otroDocente = new Docente
+        {
+            Id = Guid.NewGuid(),
+            UsuarioId = Guid.NewGuid(),
+            CreadoEn = fecha
+        };
+        var otraCohorte = new Cohorte
+        {
+            Id = Guid.NewGuid(),
+            CursoId = (await db.Cursos.SingleAsync()).Id,
+            DocenteId = otroDocente.Id,
+            Nombre = "Cohorte de otro docente",
+            CreadoEn = fecha
+        };
+        var usuarioSinMatricula = new Usuario
+        {
+            Id = Guid.NewGuid(),
+            Correo = "sin-matricula@example.test",
+            PasswordHash = "hash de prueba",
+            NombreCompleto = "Estudiante sin matrícula",
+            Activo = true,
+            CreadoEn = fecha,
+            ActualizadoEn = fecha
+        };
+        var estudianteSinMatricula = new Estudiante
+        {
+            Id = Guid.NewGuid(),
+            UsuarioId = usuarioSinMatricula.Id,
+            CreadoEn = fecha
+        };
+        var usuarioDeOtraCohorte = new Usuario
+        {
+            Id = Guid.NewGuid(),
+            Correo = "otra-cohorte@example.test",
+            PasswordHash = "hash de prueba",
+            NombreCompleto = "Estudiante de otra cohorte",
+            Activo = true,
+            CreadoEn = fecha,
+            ActualizadoEn = fecha
+        };
+        var estudianteDeOtraCohorte = new Estudiante
+        {
+            Id = Guid.NewGuid(),
+            UsuarioId = usuarioDeOtraCohorte.Id,
+            CreadoEn = fecha
+        };
+        var escenarioDocente = new Escenario
+        {
+            Id = Guid.NewGuid(),
+            CohorteId = cohorteDocente.Id,
+            Nombre = "Escenario del docente",
+            CreadoEn = fecha,
+            ActualizadoEn = fecha
+        };
+        var escenarioAjeno = new Escenario
+        {
+            Id = Guid.NewGuid(),
+            CohorteId = otraCohorte.Id,
+            Nombre = "Escenario de otra cohorte",
+            CreadoEn = fecha,
+            ActualizadoEn = fecha
+        };
+        var nivelDocente = new Nivel
+        {
+            Id = Guid.NewGuid(),
+            EscenarioId = escenarioDocente.Id,
+            Numero = 1
+        };
+        var nivelAjeno = new Nivel
+        {
+            Id = Guid.NewGuid(),
+            EscenarioId = escenarioAjeno.Id,
+            Numero = 1
+        };
+        var partidaDocente = new Partida
+        {
+            Id = Guid.NewGuid(),
+            EstudianteId = estudianteSinMatricula.Id,
+            NivelId = nivelDocente.Id,
+            FechaCreacion = fecha,
+            FechaRecepcion = fecha,
+            Finalizada = true
+        };
+        var partidaAjena = new Partida
+        {
+            Id = Guid.NewGuid(),
+            EstudianteId = estudianteSinMatricula.Id,
+            NivelId = nivelAjeno.Id,
+            FechaCreacion = fecha.AddMinutes(1),
+            FechaRecepcion = fecha.AddMinutes(1),
+            Finalizada = true
+        };
+        var partidaOtroEstudiante = new Partida
+        {
+            Id = Guid.NewGuid(),
+            EstudianteId = estudianteDeOtraCohorte.Id,
+            NivelId = nivelAjeno.Id,
+            FechaCreacion = fecha,
+            FechaRecepcion = fecha
+        };
+
+        db.Docentes.Add(otroDocente);
+        db.Cohortes.Add(otraCohorte);
+        db.Usuarios.AddRange(usuarioSinMatricula, usuarioDeOtraCohorte);
+        db.Estudiantes.AddRange(estudianteSinMatricula, estudianteDeOtraCohorte);
+        db.Escenarios.AddRange(escenarioDocente, escenarioAjeno);
+        db.Niveles.AddRange(nivelDocente, nivelAjeno);
+        db.Partidas.AddRange(partidaDocente, partidaAjena, partidaOtroEstudiante);
+        db.Kpis.Add(new Kpi
+        {
+            Id = Guid.NewGuid(),
+            PartidaId = partidaDocente.Id,
+            PuntuacionGlobal = 88,
+            FechaCreacion = fecha
+        });
+        await db.SaveChangesAsync();
+
+        var service = new ProgresoConsultaService(db);
+        var listado = await service.ListarEstudiantesAsync(ProgresoConsultaTestData.DocenteId, null);
+        var dashboard = await service.ObtenerDashboardAsync(ProgresoConsultaTestData.DocenteId);
+        var progreso = await service.ObtenerProgresoAsync(
+            ProgresoConsultaTestData.DocenteId, estudianteSinMatricula.Id);
+        var progresoDeOtraCohorte = await service.ObtenerProgresoAsync(
+            ProgresoConsultaTestData.DocenteId, estudianteDeOtraCohorte.Id);
+
+        Assert.Equal(2, listado.TotalEstudiantes);
+        var estudianteListado = Assert.Single(listado.Estudiantes, item => item.Id == estudianteSinMatricula.Id);
+        Assert.Equal("Curso de pruebas · Cohorte de pruebas", estudianteListado.CursoCohorte);
+        Assert.DoesNotContain(listado.Estudiantes, item => item.Id == estudianteDeOtraCohorte.Id);
+        Assert.Equal(2, dashboard.TotalEstudiantes);
+        Assert.Equal(1, dashboard.EstudiantesConProgreso);
+        Assert.Equal(1, dashboard.TotalPartidas);
+        Assert.Equal(88, dashboard.PromedioPuntuacionReciente);
+        Assert.NotNull(progreso);
+        Assert.Equal(1, progreso.TotalPartidas);
+        Assert.Equal(88, progreso.UltimaPuntuacionGlobal);
+        Assert.Null(progresoDeOtraCohorte);
+    }
+
+    [Fact]
     public async Task ListarEstudiantesAsync_DevuelveResumenYExcluyePartidasEliminadas()
     {
         await using var db = CrearBaseDeDatos();

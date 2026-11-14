@@ -17,26 +17,36 @@ public class ProgresoConsultaService : IProgresoConsultaService
     private static IQueryable<Estudiante> EstudiantesDelDocente(PortalDbContext db, Guid docenteId) =>
         db.Estudiantes
             .AsNoTracking()
-            .Where(e => e.Matriculas.Any(m => m.Cohorte.DocenteId == docenteId && m.Estado == "activo"));
+            .Where(e =>
+                e.Matriculas.Any(m => m.Cohorte.DocenteId == docenteId && m.Estado == "activo") ||
+                db.Partidas.Any(p =>
+                    p.EstudianteId == e.Id &&
+                    p.Nivel.Escenario.Cohorte.DocenteId == docenteId));
+
+    private static IQueryable<Partida> PartidasDelDocente(PortalDbContext db, Guid docenteId) =>
+        db.Partidas.Where(p =>
+            p.Estudiante.Matriculas.Any(m =>
+                m.Cohorte.DocenteId == docenteId && m.Estado == "activo") ||
+            p.Nivel.Escenario.Cohorte.DocenteId == docenteId);
 
     public async Task<DashboardViewModel> ObtenerDashboardAsync(Guid docenteId, CancellationToken cancellationToken = default)
     {
         var estudianteIds = EstudiantesDelDocente(_db, docenteId).Select(e => e.Id);
 
         var totalEstudiantes = await estudianteIds.CountAsync(cancellationToken);
-        var conProgreso = await _db.Partidas
+        var conProgreso = await PartidasDelDocente(_db, docenteId)
             .Where(p => estudianteIds.Contains(p.EstudianteId))
             .Select(p => p.EstudianteId)
             .Distinct()
             .CountAsync(cancellationToken);
-        var totalPartidas = await _db.Partidas
+        var totalPartidas = await PartidasDelDocente(_db, docenteId)
             .Where(p => estudianteIds.Contains(p.EstudianteId))
             .CountAsync(cancellationToken);
-        var partidasFinalizadas = await _db.Partidas
+        var partidasFinalizadas = await PartidasDelDocente(_db, docenteId)
             .Where(p => estudianteIds.Contains(p.EstudianteId) && p.Finalizada)
             .CountAsync(cancellationToken);
 
-        var partidasRecientes = await _db.Partidas
+        var partidasRecientes = await PartidasDelDocente(_db, docenteId)
             .AsNoTracking()
             .Where(p => estudianteIds.Contains(p.EstudianteId))
             .Include(p => p.Kpi)
@@ -50,7 +60,7 @@ public class ProgresoConsultaService : IProgresoConsultaService
             .Select(p => p.EstudianteId)
             .Distinct()
             .ToList();
-        var partidasPorEstudiante = await _db.Partidas
+        var partidasPorEstudiante = await PartidasDelDocente(_db, docenteId)
             .Where(p => idsDestacados.Contains(p.EstudianteId))
             .GroupBy(p => p.EstudianteId)
             .Select(g => new { EstudianteId = g.Key, Total = g.Count() })
@@ -150,7 +160,7 @@ public class ProgresoConsultaService : IProgresoConsultaService
 
         var estudianteIds = estudiantes.Select(e => e.Id).ToList();
 
-        var resumenesPartidas = await _db.Partidas
+        var resumenesPartidas = await PartidasDelDocente(_db, docenteId)
             .AsNoTracking()
             .Where(p => estudianteIds.Contains(p.EstudianteId))
             .GroupBy(partida => partida.EstudianteId)
@@ -164,6 +174,8 @@ public class ProgresoConsultaService : IProgresoConsultaService
                     .Select(partida => new
                     {
                         partida.FechaCreacion,
+                        CursoCohorte = partida.Nivel.Escenario.Cohorte.Curso.Nombre +
+                                       " · " + partida.Nivel.Escenario.Cohorte.Nombre,
                         Puntuacion = partida.Kpi == null
                             ? (decimal?)null
                             : partida.Kpi.PuntuacionGlobal
@@ -181,7 +193,7 @@ public class ProgresoConsultaService : IProgresoConsultaService
                 .OrderByDescending(m => m.MatriculadoEn)
                 .FirstOrDefault();
             var cursoCohorte = matricula == null
-                ? null
+                ? ultimaPartida?.CursoCohorte
                 : $"{matricula.Cohorte.Curso.Nombre} · {matricula.Cohorte.Nombre}";
 
             return new EstudianteListItemViewModel
@@ -222,7 +234,7 @@ public class ProgresoConsultaService : IProgresoConsultaService
         if (estudiante == null)
             return null;
 
-        var partidas = await _db.Partidas
+        var partidas = await PartidasDelDocente(_db, docenteId)
             .AsNoTracking()
             .Include(p => p.Kpi)
             .Include(p => p.Nivel)
