@@ -54,6 +54,32 @@
                 <input asp-for="Activo" />
                 <span>Cuenta activa</span>
             </label>
+            <div class="admin-cohort-assignment" data-cohort-assignment>
+                <h2>Cohortes compartidas</h2>
+                <p class="field-hint">Selecciona las cohortes que este docente podrá consultar. El docente asignado originalmente conservará su acceso.</p>
+                @if (Model.CohortesDisponibles.Count == 0)
+                {
+                    <p class="field-hint">No hay cohortes de otros docentes disponibles para compartir.</p>
+                }
+                else
+                {
+                    <div class="admin-cohort-options">
+                        @foreach (var cohorte in Model.CohortesDisponibles)
+                        {
+                            <label class="admin-cohort-option">
+                                <input type="checkbox" name="CohortesSeleccionadas"
+                                       value="@cohorte.Id"
+                                       checked="@(Model.CohortesSeleccionadas.Contains(cohorte.Id))" />
+                                <span>
+                                    <strong>@cohorte.NombreCurso</strong> (@cohorte.PeriodoAcademico)
+                                    · @cohorte.NombreCohorte
+                                    <small>Docente: @cohorte.NombreDocente</small>
+                                </span>
+                            </label>
+                        }
+                    </div>
+                }
+            </div>
         </div>
 
         <div class="admin-form-actions">
@@ -62,3 +88,21 @@
         </div>
     </form>
 </section>
+
+<script>
+    (() => {
+        const rol = document.getElementById("Rol");
+        const asignacion = document.querySelector("[data-cohort-assignment]");
+        if (!rol || !asignacion) return;
+
+        const actualizarVisibilidad = () => {
+            const esDocente = rol.value === "docente";
+            asignacion.hidden = !esDocente;
+            asignacion.querySelectorAll("input[type=checkbox]")
+                .forEach(checkbox => checkbox.disabled = !esDocente);
+        };
+
+        rol.addEventListener("change", actualizarVisibilidad);
+        actualizarVisibilidad();
+    })();
+</script>

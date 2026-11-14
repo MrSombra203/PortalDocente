@@ -33,6 +33,63 @@ public class UsuarioAdministracionServiceTests
     }
 
     [Fact]
+    public async Task CrearAsync_ComparteCohorteSeleccionadaSinCambiarAlDocentePropietario()
+    {
+        await using var db = CrearBaseDeDatos();
+        await ProgresoConsultaTestData.SeedAsync(db, 1);
+        var cohorte = await db.Cohortes.SingleAsync();
+        var modelo = CrearModelo(ClaimsPrincipalExtensions.RolDocente);
+        modelo.CohortesSeleccionadas.Add(cohorte.Id);
+
+        var error = await new UsuarioAdministracionService(db).CrearAsync(modelo);
+        var docenteNuevo = await db.Docentes
+            .SingleAsync(docente => docente.Usuario.Correo == modelo.Correo.ToLowerInvariant());
+
+        Assert.Null(error);
+        Assert.Equal(ProgresoConsultaTestData.DocenteId, cohorte.DocenteId);
+        Assert.Contains(await db.CohortesDocentes.ToListAsync(), asignacion =>
+            asignacion.DocenteId == docenteNuevo.Id && asignacion.CohorteId == cohorte.Id);
+    }
+
+    [Fact]
+    public async Task CrearAsync_RechazaCohortesQueNoExisten()
+    {
+        await using var db = CrearBaseDeDatos();
+        await AgregarRolesAsync(db);
+        var modelo = CrearModelo(ClaimsPrincipalExtensions.RolDocente);
+        modelo.CohortesSeleccionadas.Add(Guid.NewGuid());
+
+        var error = await new UsuarioAdministracionService(db).CrearAsync(modelo);
+
+        Assert.Contains("cohortes seleccionadas", error);
+        Assert.Empty(await db.Usuarios.ToListAsync());
+    }
+
+    [Fact]
+    public async Task ActualizarAsync_RetiraCohorteCompartidaSinAfectarAlPropietario()
+    {
+        await using var db = CrearBaseDeDatos();
+        await ProgresoConsultaTestData.SeedAsync(db, 1);
+        var cohorte = await db.Cohortes.SingleAsync();
+        var servicio = new UsuarioAdministracionService(db);
+        var modelo = CrearModelo(ClaimsPrincipalExtensions.RolDocente);
+        modelo.CohortesSeleccionadas.Add(cohorte.Id);
+        Assert.Null(await servicio.CrearAsync(modelo));
+
+        db.ChangeTracker.Clear();
+        var usuarioNuevo = await db.Usuarios.SingleAsync(usuario => usuario.Correo == modelo.Correo.ToLowerInvariant());
+        var edicion = await servicio.ObtenerAsync(usuarioNuevo.Id);
+        Assert.NotNull(edicion);
+        edicion!.CohortesSeleccionadas.Clear();
+
+        var error = await servicio.ActualizarAsync(edicion);
+
+        Assert.Null(error);
+        Assert.Empty(await db.CohortesDocentes.ToListAsync());
+        Assert.Equal(ProgresoConsultaTestData.DocenteId, cohorte.DocenteId);
+    }
+
+    [Fact]
     public async Task ActualizarAsync_CambiaRolYReemplazaElPerfilSinAsignarRolesMultiples()
     {
         await using var db = CrearBaseDeDatos();

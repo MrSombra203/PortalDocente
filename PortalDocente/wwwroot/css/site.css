@@ -643,6 +643,12 @@ h2 { margin-bottom: 3px; font-size: 16px; font-weight: 700; letter-spacing: -.01
 .admin-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 20px; }
 .field-hint { color: var(--muted); font-size: 12px; }
 .student-search-label { color: var(--ink); font-size: 12px; font-weight: 650; }
+.admin-cohort-assignment { grid-column: 1 / -1; display: grid; gap: 10px; padding: 18px; border: 1px solid var(--line); border-radius: 12px; }
+.admin-cohort-assignment h2 { margin: 0; font-size: 16px; }
+.admin-cohort-options { display: grid; gap: 10px; }
+.admin-cohort-option { display: flex; align-items: flex-start; gap: 10px; color: var(--ink); font-size: 13px; }
+.admin-cohort-option input { margin-top: 3px; accent-color: var(--brand); }
+.admin-cohort-option small { display: block; color: var(--muted); margin-top: 3px; }
 .admin-active-option { display: inline-flex; align-items: center; gap: 9px; color: var(--ink); font-size: 12px; }
 .admin-active-option input { width: 16px; height: 16px; accent-color: var(--brand); }
 .admin-form-actions, .admin-user-actions { display: flex; align-items: center; justify-content: flex-end; gap: 12px; }

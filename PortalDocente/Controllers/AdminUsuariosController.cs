@@ -26,13 +26,15 @@ public class AdminUsuariosController : Controller
     }
 
     [HttpGet("Crear")]
-    public IActionResult Crear()
+    public async Task<IActionResult> Crear(CancellationToken cancellationToken)
     {
         PrepararRoles();
-        return View(new UsuarioAdministracionEditViewModel
+        var modelo = new UsuarioAdministracionEditViewModel
         {
             Rol = ClaimsPrincipalExtensions.RolDocente
-        });
+        };
+        await PrepararCohortesAsync(modelo, null, cancellationToken);
+        return View(modelo);
     }
 
     [HttpPost("Crear")]
@@ -43,6 +45,7 @@ public class AdminUsuariosController : Controller
         if (!ModelState.IsValid)
         {
             PrepararRoles();
+            await PrepararCohortesAsync(modelo, null, cancellationToken);
             return View(modelo);
         }
 
@@ -51,6 +54,7 @@ public class AdminUsuariosController : Controller
         {
             ModelState.AddModelError(string.Empty, error);
             PrepararRoles();
+            await PrepararCohortesAsync(modelo, null, cancellationToken);
             return View(modelo);
         }
 
@@ -66,6 +70,7 @@ public class AdminUsuariosController : Controller
             return NotFound();
 
         PrepararRoles();
+        await PrepararCohortesAsync(modelo, id, cancellationToken);
         return View(modelo);
     }
 
@@ -80,6 +85,7 @@ public class AdminUsuariosController : Controller
         if (!ModelState.IsValid)
         {
             PrepararRoles();
+            await PrepararCohortesAsync(modelo, id, cancellationToken);
             return View(modelo);
         }
 
@@ -88,6 +94,7 @@ public class AdminUsuariosController : Controller
         {
             ModelState.AddModelError(string.Empty, error);
             PrepararRoles();
+            await PrepararCohortesAsync(modelo, id, cancellationToken);
             return View(modelo);
         }
 
@@ -119,5 +126,12 @@ public class AdminUsuariosController : Controller
             new SelectListItem("Docente", ClaimsPrincipalExtensions.RolDocente),
             new SelectListItem("Estudiante", ClaimsPrincipalExtensions.RolEstudiante)
         };
+    }
+
+    private async Task PrepararCohortesAsync(
+        UsuarioAdministracionEditViewModel modelo, Guid? usuarioId, CancellationToken cancellationToken)
+    {
+        modelo.CohortesDisponibles =
+            await _usuariosService.CargarCohortesDisponiblesAsync(usuarioId, cancellationToken);
     }
 }

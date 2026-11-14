@@ -51,9 +51,9 @@ El login consulta `usuarios`, comprueba que la cuenta esté activa y que tenga e
 
 Los administradores ingresan únicamente a la gestión de usuarios en `/Admin/Usuarios`. Desde allí pueden crear, consultar, actualizar y eliminar cuentas, asignando un rol único. No pueden consultar la información académica del docente. Las cuentas con matrículas, partidas o cohortes relacionadas no se eliminan; el último administrador activo tampoco puede quedar deshabilitado o perder su rol. La aplicación verifica la cuenta y su rol actual al validar cada solicitud autenticada.
 
-El dashboard, la búsqueda, la paginación y los perfiles consultan los registros de PostgreSQL. Un estudiante es visible para el docente si tiene una matrícula activa en una de sus cohortes o si sus partidas están asociadas a escenarios de esas cohortes. Para un estudiante sin matrícula activa, solo se muestran las partidas vinculadas a cohortes de ese docente. Los estados vacíos reflejan que la consulta no encontró registros; no se sustituyen por datos ficticios.
+Al crear o editar un docente, el administrador puede compartir con él cohortes existentes. El docente propietario conserva su acceso; las cohortes propias no se transfieren. El dashboard, la búsqueda, la paginación y los perfiles consultan los registros de las cohortes propias y compartidas. Un estudiante es visible si tiene una matrícula activa en una de esas cohortes o si sus partidas están asociadas a escenarios de esas cohortes. Para un estudiante sin matrícula activa, solo se muestran las partidas vinculadas a cohortes disponibles para ese docente. Los estados vacíos reflejan que la consulta no encontró registros; no se sustituyen por datos ficticios.
 
-La aplicación no crea ni modifica tablas ni ejecuta migraciones. El esquema se administra en PostgreSQL; no ejecutes `dotnet ef database update` para este proyecto. El portal es de solo lectura para la información académica.
+La aplicación no crea ni modifica tablas ni ejecuta migraciones. Antes de desplegar esta versión, ejecuta una vez el script `PortalDocente/Database/20261114_compartir_cohortes_docentes.sql` en la base PostgreSQL para habilitar las asignaciones compartidas. El esquema se administra en PostgreSQL; no ejecutes `dotnet ef database update` para este proyecto. El portal sigue siendo de solo lectura para la información académica.
 
 ## Pruebas
 

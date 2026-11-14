@@ -58,7 +58,7 @@ public sealed class UsuarioAdministracionService : IUsuarioAdministracionService
         if (usuario == null)
             return null;
 
-        return new UsuarioAdministracionEditViewModel
+        var modelo = new UsuarioAdministracionEditViewModel
         {
             Id = usuario.Id,
             NombreCompleto = usuario.NombreCompleto,
@@ -68,6 +68,54 @@ public sealed class UsuarioAdministracionService : IUsuarioAdministracionService
             CodigoInstitucional = usuario.Estudiante?.CodigoInstitucional,
             TituloAcademico = usuario.Docente?.TituloAcademico
         };
+
+        if (usuario.Docente != null)
+        {
+            modelo.CohortesSeleccionadas = await _db.CohortesDocentes
+                .AsNoTracking()
+                .Where(asignacion => asignacion.DocenteId == usuario.Docente.Id)
+                .Select(asignacion => asignacion.CohorteId)
+                .ToListAsync(cancellationToken);
+        }
+
+        return modelo;
+    }
+
+    public async Task<IReadOnlyList<CohorteAsignacionViewModel>> CargarCohortesDisponiblesAsync(
+        Guid? usuarioId, CancellationToken cancellationToken = default)
+    {
+        Guid? docenteId = null;
+        if (usuarioId.HasValue)
+        {
+            var idEncontrado = await _db.Docentes
+                .AsNoTracking()
+                .Where(docente => docente.UsuarioId == usuarioId.Value)
+                .Select(docente => docente.Id)
+                .SingleOrDefaultAsync(cancellationToken);
+            if (idEncontrado != Guid.Empty)
+                docenteId = idEncontrado;
+        }
+
+        var cohortesQuery = _db.Cohortes.AsNoTracking();
+        if (docenteId.HasValue)
+            cohortesQuery = cohortesQuery.Where(cohorte => cohorte.DocenteId != docenteId.Value);
+
+        var cohortes = await cohortesQuery
+            .Include(cohorte => cohorte.Curso)
+            .Include(cohorte => cohorte.Docente)
+                .ThenInclude(docente => docente.Usuario)
+            .OrderBy(cohorte => cohorte.Curso.Nombre)
+            .ThenBy(cohorte => cohorte.Nombre)
+            .ToListAsync(cancellationToken);
+
+        return cohortes.Select(cohorte => new CohorteAsignacionViewModel
+        {
+            Id = cohorte.Id,
+            NombreCurso = cohorte.Curso.Nombre,
+            PeriodoAcademico = cohorte.Curso.PeriodoAcademico,
+            NombreCohorte = cohorte.Nombre,
+            NombreDocente = cohorte.Docente.Usuario.NombreCompleto
+        }).ToList();
     }
 
     public async Task<string?> CrearAsync(
@@ -79,6 +127,10 @@ public sealed class UsuarioAdministracionService : IUsuarioAdministracionService
         var rol = await ObtenerRolAsync(modelo.Rol, cancellationToken);
         if (rol.Error != null)
             return rol.Error;
+
+        var cohortesResult = await ValidarCohortesSeleccionadasAsync(modelo, null, cancellationToken);
+        if (cohortesResult.Error != null)
+            return cohortesResult.Error;
 
         var correo = modelo.Correo.Trim().ToLowerInvariant();
         if (await CorreoExisteAsync(correo, null, cancellationToken))
@@ -104,6 +156,16 @@ public sealed class UsuarioAdministracionService : IUsuarioAdministracionService
             Rol = rol.Rol
         });
         CrearPerfil(usuario, modelo, modelo.Rol, ahora);
+        if (usuario.Docente != null)
+        {
+            _db.CohortesDocentes.AddRange(cohortesResult.CohorteIds.Select(cohorteId =>
+                new CohorteDocente
+                {
+                    DocenteId = usuario.Docente.Id,
+                    CohorteId = cohorteId,
+                    AsignadaEn = ahora
+                }));
+        }
         _db.Usuarios.Add(usuario);
 
         try
@@ -144,6 +206,11 @@ public sealed class UsuarioAdministracionService : IUsuarioAdministracionService
         if (rolResult.Error != null)
             return rolResult.Error;
 
+        var cohortesResult = await ValidarCohortesSeleccionadasAsync(
+            modelo, usuario.Docente?.Id, cancellationToken);
+        if (cohortesResult.Error != null)
+            return cohortesResult.Error;
+
         var correo = modelo.Correo.Trim().ToLowerInvariant();
         if (await CorreoExisteAsync(correo, usuario.Id, cancellationToken))
             return ErrorCorreoDuplicado;
@@ -165,6 +232,12 @@ public sealed class UsuarioAdministracionService : IUsuarioAdministracionService
         var errorPerfil = SincronizarPerfil(usuario, modelo);
         if (errorPerfil != null)
             return errorPerfil;
+
+        if (modelo.Rol == ClaimsPrincipalExtensions.RolDocente)
+        {
+            await SincronizarCohortesCompartidasAsync(
+                usuario.Docente!.Id, cohortesResult.CohorteIds, cancellationToken);
+        }
 
         usuario.Correo = correo;
         usuario.NombreCompleto = modelo.NombreCompleto.Trim();
@@ -278,6 +351,57 @@ public sealed class UsuarioAdministracionService : IUsuarioAdministracionService
         }
 
         return null;
+    }
+
+    private async Task<(IReadOnlyList<Guid> CohorteIds, string? Error)> ValidarCohortesSeleccionadasAsync(
+        UsuarioAdministracionEditViewModel modelo, Guid? docenteId, CancellationToken cancellationToken)
+    {
+        if (modelo.Rol != ClaimsPrincipalExtensions.RolDocente)
+            return (Array.Empty<Guid>(), null);
+
+        var cohortesSeleccionadas = (modelo.CohortesSeleccionadas ?? [])
+            .Distinct()
+            .ToArray();
+        if (cohortesSeleccionadas.Any(id => id == Guid.Empty))
+            return (Array.Empty<Guid>(), "Una o más cohortes seleccionadas no están disponibles.");
+
+        var cohortesValidasQuery = _db.Cohortes
+            .AsNoTracking()
+            .Where(cohorte => cohortesSeleccionadas.Contains(cohorte.Id));
+        if (docenteId.HasValue)
+            cohortesValidasQuery = cohortesValidasQuery.Where(cohorte => cohorte.DocenteId != docenteId.Value);
+
+        var cohortesValidas = await cohortesValidasQuery
+            .Select(cohorte => cohorte.Id)
+            .ToListAsync(cancellationToken);
+        if (cohortesValidas.Count != cohortesSeleccionadas.Length)
+            return (Array.Empty<Guid>(), "Una o más cohortes seleccionadas no están disponibles.");
+
+        return (cohortesSeleccionadas, null);
+    }
+
+    private async Task SincronizarCohortesCompartidasAsync(
+        Guid docenteId, IReadOnlyList<Guid> cohortesSeleccionadas, CancellationToken cancellationToken)
+    {
+        var asignacionesActuales = await _db.CohortesDocentes
+            .Where(asignacion => asignacion.DocenteId == docenteId)
+            .ToListAsync(cancellationToken);
+        var idsSeleccionados = cohortesSeleccionadas.ToHashSet();
+        var asignacionesRetiradas = asignacionesActuales
+            .Where(asignacion => !idsSeleccionados.Contains(asignacion.CohorteId))
+            .ToList();
+        _db.CohortesDocentes.RemoveRange(asignacionesRetiradas);
+
+        var idsActuales = asignacionesActuales.Select(asignacion => asignacion.CohorteId).ToHashSet();
+        var ahora = DateTimeOffset.UtcNow;
+        _db.CohortesDocentes.AddRange(cohortesSeleccionadas
+            .Where(cohorteId => !idsActuales.Contains(cohorteId))
+            .Select(cohorteId => new CohorteDocente
+            {
+                DocenteId = docenteId,
+                CohorteId = cohorteId,
+                AsignadaEn = ahora
+            }));
     }
 
     private async Task<string?> ComprobarDependenciasAsync(

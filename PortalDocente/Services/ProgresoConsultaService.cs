@@ -18,16 +18,27 @@ public class ProgresoConsultaService : IProgresoConsultaService
         db.Estudiantes
             .AsNoTracking()
             .Where(e =>
-                e.Matriculas.Any(m => m.Cohorte.DocenteId == docenteId && m.Estado == "activo") ||
+                e.Matriculas.Any(m =>
+                    m.Estado == "activo" &&
+                    (m.Cohorte.DocenteId == docenteId ||
+                     db.CohortesDocentes.Any(cd =>
+                         cd.CohorteId == m.CohorteId && cd.DocenteId == docenteId))) ||
                 db.Partidas.Any(p =>
                     p.EstudianteId == e.Id &&
-                    p.Nivel.Escenario.Cohorte.DocenteId == docenteId));
+                    (p.Nivel.Escenario.Cohorte.DocenteId == docenteId ||
+                     db.CohortesDocentes.Any(cd =>
+                         cd.CohorteId == p.Nivel.Escenario.CohorteId && cd.DocenteId == docenteId))));
 
     private static IQueryable<Partida> PartidasDelDocente(PortalDbContext db, Guid docenteId) =>
         db.Partidas.Where(p =>
             p.Estudiante.Matriculas.Any(m =>
-                m.Cohorte.DocenteId == docenteId && m.Estado == "activo") ||
-            p.Nivel.Escenario.Cohorte.DocenteId == docenteId);
+                m.Estado == "activo" &&
+                (m.Cohorte.DocenteId == docenteId ||
+                 db.CohortesDocentes.Any(cd =>
+                     cd.CohorteId == m.CohorteId && cd.DocenteId == docenteId))) ||
+            p.Nivel.Escenario.Cohorte.DocenteId == docenteId ||
+            db.CohortesDocentes.Any(cd =>
+                cd.CohorteId == p.Nivel.Escenario.CohorteId && cd.DocenteId == docenteId));
 
     public async Task<DashboardViewModel> ObtenerDashboardAsync(Guid docenteId, CancellationToken cancellationToken = default)
     {
@@ -189,7 +200,11 @@ public class ProgresoConsultaService : IProgresoConsultaService
             var resumen = resumenesPartidas.GetValueOrDefault(e.Id);
             var ultimaPartida = resumen?.UltimaPartida;
             var matricula = e.Matriculas
-                .Where(m => m.Cohorte.DocenteId == docenteId && m.Estado == "activo")
+                .Where(m =>
+                    m.Estado == "activo" &&
+                    (m.Cohorte.DocenteId == docenteId ||
+                     _db.CohortesDocentes.Any(cd =>
+                         cd.CohorteId == m.CohorteId && cd.DocenteId == docenteId)))
                 .OrderByDescending(m => m.MatriculadoEn)
                 .FirstOrDefault();
             var cursoCohorte = matricula == null
@@ -244,7 +259,11 @@ public class ProgresoConsultaService : IProgresoConsultaService
             .ToListAsync(cancellationToken);
 
         var matricula = estudiante.Matriculas
-            .Where(m => m.Cohorte.DocenteId == docenteId && m.Estado == "activo")
+            .Where(m =>
+                m.Estado == "activo" &&
+                (m.Cohorte.DocenteId == docenteId ||
+                 _db.CohortesDocentes.Any(cd =>
+                     cd.CohorteId == m.CohorteId && cd.DocenteId == docenteId)))
             .OrderByDescending(m => m.MatriculadoEn)
             .FirstOrDefault();
         var cursoCohorte = matricula == null

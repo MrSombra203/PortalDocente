@@ -10,6 +10,9 @@ public interface IUsuarioAdministracionService
     Task<UsuarioAdministracionEditViewModel?> ObtenerAsync(
         Guid id, CancellationToken cancellationToken = default);
 
+    Task<IReadOnlyList<CohorteAsignacionViewModel>> CargarCohortesDisponiblesAsync(
+        Guid? usuarioId, CancellationToken cancellationToken = default);
+
     Task<string?> CrearAsync(
         UsuarioAdministracionEditViewModel modelo, CancellationToken cancellationToken = default);
 
